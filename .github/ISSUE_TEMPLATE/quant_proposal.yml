@@ -1,0 +1,30 @@
+name: Quantitative Research Proposal
+description: Propose a mathematical model, microstructure metric, or execution algorithm.
+labels: ["quant-research", "mathematics"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to propose academic or empirical models (e.g. VPIN, Hawkes processes, Almgren-Chriss, Cartea-Jaimungal).
+  - type: input
+    id: model_name
+    attributes:
+      label: Model or Metric Name
+      placeholder: e.g. Volume-Synchronized Probability of Toxicity (VPIN)
+    validations:
+      required: true
+  - type: textarea
+    id: mathematical_formulation
+    attributes:
+      label: Mathematical Formulation (LaTeX / Text)
+      placeholder: Document the equations, assumptions, and variable definitions.
+    validations:
+      required: true
+  - type: textarea
+    id: academic_references
+    attributes:
+      label: Academic References & Literature
+      placeholder: e.g. Easley, Lopez de Prado, O'Hara (2012)
+    validations:
+      required: true
+

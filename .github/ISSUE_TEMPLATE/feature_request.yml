@@ -1,0 +1,30 @@
+name: Feature Request
+description: Propose a new feature, visualization panel, or data connector for Stratum.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea to make Stratum even more powerful for Quants or Trading Desks? Propose it here!
+  - type: input
+    id: feature_summary
+    attributes:
+      label: Feature Summary
+      placeholder: e.g. Add Databento CME L3 feed connector
+    validations:
+      required: true
+  - type: textarea
+    id: problem_solved
+    attributes:
+      label: Problem or Workflow this Addresses
+      placeholder: What trading, research, or execution workflow does this improve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposed_solution
+    attributes:
+      label: Proposed Solution & UI Design
+      placeholder: How should this look, work, or be mathematically formulated?
+    validations:
+      required: true
+

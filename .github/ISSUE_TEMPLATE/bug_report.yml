@@ -1,0 +1,52 @@
+name: Bug Report
+description: Report an issue, rendering error, or execution discrepancy in Stratum.
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue in Stratum. Please ensure you are testing against the latest `main` commit.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      options:
+        - Dashboard (Terminal UI)
+        - Live WebSocket Feed
+        - TCA Analytics Engine
+        - Simulation Runner (Rust)
+        - Ingestion / Conversion Tools (Python)
+    validations:
+      required: true
+  - type: input
+    id: symbol_or_session
+    attributes:
+      label: Symbol or Session Name
+      placeholder: e.g. BTCUSDT live stream or sample.hbr
+    validations:
+      required: false
+  - type: textarea
+    id: description
+    attributes:
+      label: Description of the Problem
+      placeholder: What happened vs what did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      placeholder: |
+        1. Open dashboard with '...'
+        2. Click '...'
+        3. Observe discrepancy...
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment & Browser
+      placeholder: e.g. macOS Sonoma, Chrome 128, Node 20.x
+    validations:
+      required: true
+

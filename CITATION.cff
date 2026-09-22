@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you utilize Open-HFT in your academic research, quantitative finance papers, or execution quality benchmarking, please cite it as below."
+authors:
+  - name: "Open-HFT Contributors"
+title: "Open-HFT: Institutional Market Microstructure & High-Frequency Trading Engine Terminal"
+version: 1.0.0
+date-released: 2026-09-22
+url: "https://github.com/open-hft/open-hft"
+keywords:
+  - "market-microstructure"
+  - "transaction-cost-analysis"
+  - "order-flow-imbalance"
+  - "high-frequency-trading"
+  - "trading-terminal"
+  - "best-execution"
+license: MIT
