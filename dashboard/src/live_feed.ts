@@ -250,10 +250,33 @@ export class LiveMarketFeed {
 
     const curBase = this.state.lastPrice || base;
     const now = Date.now();
-    this.syntheticOrders = [
-      { id: Date.now(), symbol: s, side: "BUY", price: curBase - tick, qty: lot * 2, submitTime: now, queueAhead: 35, levelQty: 50, arrivalPrice: curBase },
-      { id: Date.now() + 1, symbol: s, side: "SELL", price: curBase + tick, qty: lot * 2, submitTime: now, queueAhead: 25, levelQty: 40, arrivalPrice: curBase },
-    ];
+    // Seed a 5-level market-maker grid — will be maintained by maintainSyntheticOrders()
+    this.syntheticOrders = [];
+    for (let i = 0; i < 5; i++) {
+      this.syntheticOrders.push({
+        id: Date.now() + i * 2,
+        symbol: s,
+        side: "BUY",
+        price: Math.round((curBase - tick * (i + 1)) / tick) * tick,
+        qty: lot * 5,
+        submitTime: now - i * 80,
+        queueAhead: (lot * 10) * (0.3 + Math.random() * 0.5),
+        levelQty: lot * 20,
+        arrivalPrice: curBase,
+      });
+      this.syntheticOrders.push({
+        id: Date.now() + i * 2 + 1,
+        symbol: s,
+        side: "SELL",
+        price: Math.round((curBase + tick * (i + 1)) / tick) * tick,
+        qty: lot * 5,
+        submitTime: now - i * 80,
+        queueAhead: (lot * 10) * (0.3 + Math.random() * 0.5),
+        levelQty: lot * 20,
+        arrivalPrice: curBase,
+      });
+    }
+
 
     const d = new Date();
     const timeStr = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}`;
@@ -624,52 +647,69 @@ export class LiveMarketFeed {
   }
 
   private maintainSyntheticOrders() {
-    if (this.syntheticOrders.length >= 4) return;
     if (this.state.bestBid === 0 || this.state.bestAsk === 0) return;
 
     const now = Date.now();
     const mid = this.state.midPrice;
+    const tick = this.security.tickSize;
     const orderQty = this.security.lotSize * 5;
+    // Market-maker grid: 5 levels per side at touch, touch+1t, touch+2t, touch+3t, touch+4t
+    const GRID_LEVELS = 5;
 
-    const hasBuy = this.syntheticOrders.some((o) => o.side === "BUY");
-    const hasSell = this.syntheticOrders.some((o) => o.side === "SELL");
+    const existingBuyPrices = new Set(this.syntheticOrders.filter(o => o.side === "BUY").map(o => Math.round(o.price / tick)));
+    const existingSellPrices = new Set(this.syntheticOrders.filter(o => o.side === "SELL").map(o => Math.round(o.price / tick)));
 
-    if (!hasBuy && this.state.bids.length > 0) {
-      const topBid = this.state.bids[0];
-      const ord: SyntheticOrder = {
-        id: this.nextOrderId++,
-        symbol: this.symbol,
-        side: "BUY",
-        price: topBid.price,
-        qty: orderQty,
-        submitTime: now,
-        queueAhead: topBid.qty * 0.6,
-        levelQty: topBid.qty,
-        arrivalPrice: mid,
-      };
-      this.syntheticOrders.push(ord);
-      this.logEvent("SUBMIT", "BUY", ord.price, ord.qty, "POST-ONLY LIMIT @ TOUCH", "w");
-      this.logEvent("ACK", "BUY", ord.price, ord.qty, `RESTING (AHEAD: ${ord.queueAhead.toFixed(2)})`, "g");
+    for (let i = 0; i < GRID_LEVELS; i++) {
+      const buyPrice = Math.round((this.state.bestBid - i * tick) / tick) * tick;
+      const sellPrice = Math.round((this.state.bestAsk + i * tick) / tick) * tick;
+
+      if (!existingBuyPrices.has(Math.round(buyPrice / tick)) && this.state.bids[i]) {
+        const level = this.state.bids[i];
+        const ord: SyntheticOrder = {
+          id: this.nextOrderId++,
+          symbol: this.symbol,
+          side: "BUY",
+          price: buyPrice,
+          qty: orderQty,
+          submitTime: now - Math.random() * 400,
+          queueAhead: level.qty * (0.3 + Math.random() * 0.5),
+          levelQty: level.qty,
+          arrivalPrice: mid,
+        };
+        this.syntheticOrders.push(ord);
+        if (i === 0) {
+          this.logEvent("SUBMIT", "BUY", ord.price, ord.qty, "POST-ONLY LIMIT @ TOUCH", "w");
+          this.logEvent("ACK", "BUY", ord.price, ord.qty, `RESTING (AHEAD: ${ord.queueAhead.toFixed(2)})`, "g");
+        }
+      }
+
+      if (!existingSellPrices.has(Math.round(sellPrice / tick)) && this.state.asks[i]) {
+        const level = this.state.asks[i];
+        const ord: SyntheticOrder = {
+          id: this.nextOrderId++,
+          symbol: this.symbol,
+          side: "SELL",
+          price: sellPrice,
+          qty: orderQty,
+          submitTime: now - Math.random() * 400,
+          queueAhead: level.qty * (0.3 + Math.random() * 0.5),
+          levelQty: level.qty,
+          arrivalPrice: mid,
+        };
+        this.syntheticOrders.push(ord);
+        if (i === 0) {
+          this.logEvent("SUBMIT", "SELL", ord.price, ord.qty, "POST-ONLY LIMIT @ TOUCH", "w");
+          this.logEvent("ACK", "SELL", ord.price, ord.qty, `RESTING (AHEAD: ${ord.queueAhead.toFixed(2)})`, "g");
+        }
+      }
     }
 
-    if (!hasSell && this.state.asks.length > 0) {
-      const topAsk = this.state.asks[0];
-      const ord: SyntheticOrder = {
-        id: this.nextOrderId++,
-        symbol: this.symbol,
-        side: "SELL",
-        price: topAsk.price,
-        qty: orderQty,
-        submitTime: now,
-        queueAhead: topAsk.qty * 0.6,
-        levelQty: topAsk.qty,
-        arrivalPrice: mid,
-      };
-      this.syntheticOrders.push(ord);
-      this.logEvent("SUBMIT", "SELL", ord.price, ord.qty, "POST-ONLY LIMIT @ TOUCH", "w");
-      this.logEvent("ACK", "SELL", ord.price, ord.qty, `RESTING (AHEAD: ${ord.queueAhead.toFixed(2)})`, "g");
+    // Cap at GRID_LEVELS*2, remove oldest if exceeded
+    if (this.syntheticOrders.length > GRID_LEVELS * 2) {
+      this.syntheticOrders = this.syntheticOrders.slice(-GRID_LEVELS * 2);
     }
   }
+
 
   private matchSyntheticOrders(tradePrice: number, tradeQty: number, tradeSide: "BUY" | "SELL", tradeTime: number) {
     const remaining: SyntheticOrder[] = [];

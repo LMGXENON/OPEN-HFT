@@ -272,7 +272,8 @@ export class QueuePanel extends Panel {
     }
 
     this.content.innerHTML = out.join("\n");
-    this.setTitle(`${syntheticOrders.length} resting / ${syntheticOrders.length} working │ FIFO PowerLaw (α=3.0)`);
+    const nResting = syntheticOrders.filter(o => o.queueAhead > 0).length;
+    this.setTitle(`${nResting} resting / ${syntheticOrders.length} working │ FIFO PowerLaw (α=3.0)`);
   }
 
 }
