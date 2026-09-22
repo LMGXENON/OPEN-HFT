@@ -12,7 +12,7 @@ export class MarketPanel extends Panel {
 
   constructor(s: Session) {
     super("market", 5, "MARKET", s);
-    this.canvas = el("canvas", "", this.body);
+    this.canvas = el("canvas", "", this.content);
     this.pxd = tickDigits(s.tickSize);
   }
 

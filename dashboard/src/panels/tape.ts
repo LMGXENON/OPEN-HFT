@@ -55,7 +55,7 @@ export class TapePanel extends Panel {
       list.push({ t, html: line });
     }
     list.sort((a, b) => b.t - a.t);
-    this.body.innerHTML = list
+    this.content.innerHTML = list
       .slice(0, rows)
       .map((r) => r.html)
       .join("\n");
@@ -66,7 +66,7 @@ export class TapePanel extends Panel {
 
   renderLive(trades: Array<{ time: number; price: number; qty: number; side: "BUY" | "SELL"; cpty?: string }>): void {
     if (!trades || trades.length === 0) {
-      this.body.innerHTML = `<div class="blotter-empty"><span class="amber">AWAITING MARKET MATCH EXECUTIONS...</span></div>`;
+      this.content.innerHTML = `<div class="blotter-empty"><span class="amber">AWAITING MARKET MATCH EXECUTIONS...</span></div>`;
       return;
     }
 
@@ -113,7 +113,7 @@ export class TapePanel extends Panel {
       out.push(idx === 0 ? `<div class="tape-row-new">${rowText}</div>` : `<div class="tape-row">${rowText}</div>`);
     }
 
-    this.body.innerHTML = out.join("\n");
+    this.content.innerHTML = out.join("\n");
     this.setTitle(`TIME & SALES (${trades.length} RECENT)`);
   }
 }

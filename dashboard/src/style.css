@@ -700,7 +700,18 @@ body {
   height: calc(100% - 25px) !important;
   min-height: 0 !important;
   overflow: hidden !important;
-  padding: 4px 6px !important;
+  padding: 0 !important;
+  /* Center the content block in the full-screen body */
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.work.single > .panel > .body > .content,
+.work.focus > .panel > .body > .content {
+  width: fit-content !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
 }
 
 /* ==========================================================================
@@ -773,6 +784,15 @@ body {
   font-feature-settings: "tnum" 1;
 }
 
+/* .content is the inner wrapper that gets centered in focus mode.
+   In the 9-panel grid it simply fills the body normally. */
+.panel > .body > .content {
+  display: block;
+  width: 100%;
+  white-space: pre;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
 /* Smooth Minimal Scrollbars */
 .panel > .body::-webkit-scrollbar,
 .term-modal-card::-webkit-scrollbar,
@@ -815,23 +835,15 @@ body {
 .bold { font-weight: bold; }
 .mono { font-family: var(--font-mono); }
 
-/* Ladder & Depth Level Styling */
-/* The ladder body must have padding:0 and overflow:hidden so that:
-   - bar left: px values share the same origin as the pre-formatted text column
-   - no scrollbar appears and shifts clientWidth, causing cols to jitter */
-.panel > .body.ladder {
-  padding: 0 !important;
-  overflow: hidden !important;
-}
-.work.single > .panel > .body.ladder,
-.work.focus > .panel > .body.ladder {
-  padding: 0 !important;
-  overflow: hidden !important;
-}
+/* Ladder & Depth Level Styling
+   .ladder goes on the .content wrapper (not body) so bars and text share the same
+   coordinate origin. The content wrapper is as wide as the 46-char ladder rows —
+   the body flex-centers this wrapper in focus mode. */
 .ladder {
   display: block;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
+  overflow: hidden;
 }
 .ladder .row {
   position: relative;
@@ -871,7 +883,7 @@ body {
 .fill-flash { background: var(--accent); color: #000000; }
 .hit { background: #1e293b; color: #ffffff; }
 
-/* Queue Position Bar (HRT Microstructure Aesthetic) */
+
 .qbar {
   display: inline-block;
   position: relative;

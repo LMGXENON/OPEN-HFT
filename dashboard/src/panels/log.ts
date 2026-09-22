@@ -85,7 +85,7 @@ export class LogPanel extends Panel {
       const name = k === EV.SUBMIT ? "NEW" : k === EV.ACK ? "ACK" : k === EV.FILL ? "FILL" : k === EV.CANCEL_SENT ? "CXL" : k === EV.CANCELED ? "CXLD" : k === EV.EXPIRED ? "REJ" : "CREJ";
       out.push(sp("d", t) + " " + sp(kcls, lj(name, 5)) + body);
     }
-    this.body.innerHTML = out.join("\n");
+    this.content.innerHTML = out.join("\n");
     this.setTitle(`${evN} events`);
   }
 
@@ -95,7 +95,7 @@ export class LogPanel extends Panel {
 
     if (!events || events.length === 0) {
       out.push(sp("d", "  LISTENING FOR STRATEGY EXECUTION EVENTS..."));
-      this.body.innerHTML = out.join("\n");
+      this.content.innerHTML = out.join("\n");
       this.setTitle("ORDER LOG (0 EVENTS)");
       return;
     }
@@ -123,7 +123,7 @@ export class LogPanel extends Panel {
       if (out.length >= rows) break;
     }
 
-    this.body.innerHTML = out.join("\n");
+    this.content.innerHTML = out.join("\n");
     this.setTitle(`${events.length} events`);
   }
 

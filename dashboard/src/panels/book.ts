@@ -24,7 +24,8 @@ export class BookPanel extends Panel {
     super("book", 1, "BOOK", s);
     this.pxd = tickDigits(s.tickSize);
     this.qd = lotDigits(s.lotSize);
-    this.body.classList.add("ladder");
+    // .ladder goes on the content wrapper so .ladder .row/.bar/.txt selectors work
+    this.content.classList.add("ladder");
     const m = new URLSearchParams(location.search).get("ladder");
     if (m === "ticks" || m === "levels") this.mode = m;
   }
@@ -42,9 +43,8 @@ export class BookPanel extends Panel {
     const rows = this.rows;
     const key = `${f}|${rows}|${this.cols}|${this.mode}|${[...hits.keys()].join(",")}|${[...fills].join(",")}`;
     if (!this.changed(key)) return;
-    // centre the 46-column ladder in the panel
-    const padCols = Math.max(0, Math.floor((this.cols - (OURS_W + 1 + QTY_W + 1 + PX_W + 1 + QTY_W + 1 + OURS_W)) / 2));
-    this.body.style.paddingLeft = `${(padCols + 1) * CW}px`;
+    // content div is centered by body flex — no paddingLeft needed
+
 
     const bb = s.bestBidTick[f];
     const ba = s.bestAskTick[f];
@@ -162,7 +162,7 @@ export class BookPanel extends Panel {
       : "  no book";
     out.push(`<div class="row spread">${esc(spreadTxt)}</div>`);
     for (let i = 0; i < bidTicks.length; i++) row(bidTicks[i], 1, bidTicks[i] === bb);
-    this.body.innerHTML = out.join("");
+    this.content.innerHTML = out.join("");
 
     const bq = bids.get(bb) ?? 0;
     const aq = asks.get(ba) ?? 0;
@@ -171,7 +171,7 @@ export class BookPanel extends Panel {
 
   renderLive(state: { symbol: string; bids: Array<{ price: number; qty: number }>; asks: Array<{ price: number; qty: number }>; bestBid: number; bestAsk: number; midPrice: number; spreadPrice: number; spreadBps: number }, syntheticOrders: Array<{ side: "BUY" | "SELL"; price: number; qty: number; queueAhead: number }>): void {
     if (state.bids.length === 0 && state.asks.length === 0) {
-      this.body.innerHTML = `<div class="blotter-empty"><span class="amber">INITIALIZING L2 ORDER BOOK...</span></div>`;
+      this.content.innerHTML = `<div class="blotter-empty"><span class="amber">INITIALIZING L2 ORDER BOOK...</span></div>`;
       return;
     }
 
@@ -181,10 +181,10 @@ export class BookPanel extends Panel {
     if (!this.changed(liveKey)) return;
 
     // Fixed symmetric layout — identical column geometry to replay render().
-    // Total visible chars: OURS_W + 1 + QTY_W + 1 + PX_W + 1 + QTY_W + 1 + OURS_W
+    // Total visible chars: OURS_W + 1 + QTY_W + 1 + PX_W + 1 + QTY_W + 1 + OURS_W = 46
+    // Body flex-centers the .content (ladder) block — no paddingLeft needed.
     const LADDER_W = OURS_W + 1 + QTY_W + 1 + PX_W + 1 + QTY_W + 1 + OURS_W; // 46
-    const padCols = Math.max(0, Math.floor((cols - LADDER_W) / 2));
-    this.body.style.paddingLeft = `${(padCols + 1) * CW}px`;
+
 
     // Bar anchor positions are relative to the padded body origin (paddingLeft).
     // Bid bars grow left from the price column; ask bars grow right from it.
@@ -310,7 +310,7 @@ export class BookPanel extends Panel {
       out.push(`<div class="row${isBest ? " best" : ""}">${bars}<div class="txt">${txt}</div></div>`);
     }
 
-    this.body.innerHTML = out.join("");
+    this.content.innerHTML = out.join("");
     const bq = state.bids[0]?.qty ?? 0;
     const aq = state.asks[0]?.qty ?? 0;
     this.setTitle(`${fmtSmartQty(bq)} x ${fmtSmartQty(aq)} @ ${fmtSmartPrice(state.bestBid)}/${fmtSmartPrice(state.bestAsk)}`);

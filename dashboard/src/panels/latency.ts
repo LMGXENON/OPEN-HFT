@@ -18,11 +18,11 @@ export class LatencyPanel extends Panel {
   constructor(s: Session) {
     super("latency", 3, "LATENCY", s);
     this.pxd = tickDigits(s.tickSize);
-    this.top = el("div", "", this.body);
-    this.spark = el("canvas", "", this.body);
-    this.mid = el("div", "", this.body);
-    this.trips = el("canvas", "", this.body);
-    this.foot = el("div", "", this.body);
+    this.top = el("div", "", this.content);
+    this.spark = el("canvas", "", this.content);
+    this.mid = el("div", "", this.content);
+    this.trips = el("canvas", "", this.content);
+    this.foot = el("div", "", this.content);
   }
 
   render(c: RenderCtx): void {

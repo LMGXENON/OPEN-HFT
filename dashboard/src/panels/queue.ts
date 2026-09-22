@@ -110,7 +110,7 @@ export class QueuePanel extends Panel {
           sp("d", "   filled after price touched ") + sp("", `${st.touchedPct}%`),
       );
     }
-    this.body.innerHTML = out.join("\n");
+    this.content.innerHTML = out.join("\n");
     const live = o1 - o0;
     const acked = (() => {
       let n = 0;
@@ -181,7 +181,7 @@ export class QueuePanel extends Panel {
 
     if (!syntheticOrders || syntheticOrders.length === 0) {
       out.push(sp("d", "no working orders"));
-      this.body.innerHTML = out.join("\n");
+      this.content.innerHTML = out.join("\n");
       this.setTitle(`0 resting / 0 working │ FIFO PowerLaw (α=3.0)`);
       return;
     }
@@ -271,7 +271,7 @@ export class QueuePanel extends Panel {
       );
     }
 
-    this.body.innerHTML = out.join("\n");
+    this.content.innerHTML = out.join("\n");
     this.setTitle(`${syntheticOrders.length} resting / ${syntheticOrders.length} working │ FIFO PowerLaw (α=3.0)`);
   }
 

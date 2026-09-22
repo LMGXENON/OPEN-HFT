@@ -31,9 +31,9 @@ export class CollectorPanel extends Panel {
 
   constructor(s: Session) {
     super("collector", 9, "COLLECTOR", s);
-    this.head = el("div", "", this.body);
-    this.rate = el("canvas", "", this.body);
-    this.tail = el("div", "", this.body);
+    this.head = el("div", "", this.content);
+    this.rate = el("canvas", "", this.content);
+    this.tail = el("div", "", this.content);
   }
 
   render(c: RenderCtx): void {
@@ -140,7 +140,7 @@ export class CollectorPanel extends Panel {
     lines.push(sp("d", lj("RATE", 6)) + sp("w", `${stats.msgPerSec} msg/s`) + sp("d", ` │ ${bytes(stats.bytesReceived)} total payload`));
     lines.push(sp("d", lj("STATUS", 6)) + sp("g", "DIRECT DMA RING BUFFER ACTIVE (0 PACKETS DROPPED)"));
 
-    this.body.innerHTML = lines.join("\n");
+    this.content.innerHTML = lines.join("\n");
     this.setTitle(`direct live stream │ 0 snapshots`);
   }
 

@@ -70,7 +70,7 @@ export class FillsPanel extends Panel {
       );
     }
     if (nFill === 0) out.push(sp("d", "no executions yet"));
-    this.body.innerHTML = out.join("\n");
+    this.content.innerHTML = out.join("\n");
     const ws = Float64Array.from(waits).sort();
     const med = ws.length ? ws[ws.length >> 1] : NaN;
     this.setTitle(`${nFill} fills │ rested p50 ${dur(med)} │ after touch ${nTouch} / crossed ${nCross}`);
@@ -90,7 +90,7 @@ export class FillsPanel extends Panel {
 
     if (!trades || trades.length === 0) {
       out.push(sp("d", "no executions yet"));
-      this.body.innerHTML = out.join("\n");
+      this.content.innerHTML = out.join("\n");
       this.setTitle("0 fills");
       return;
     }
@@ -120,7 +120,7 @@ export class FillsPanel extends Panel {
       if (out.length >= rows) break;
     }
 
-    this.body.innerHTML = out.join("\n");
+    this.content.innerHTML = out.join("\n");
     const medWait = trades.length ? trades[Math.floor(trades.length / 2)].queueWaitMs : 0;
     this.setTitle(`${trades.length} fills │ rested p50 ${medWait.toFixed(0)}ms │ clean maker 100%`);
   }

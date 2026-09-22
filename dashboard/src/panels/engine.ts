@@ -77,7 +77,7 @@ export class EnginePanel extends Panel {
     );
     lines.push(L("", sp("d", `${thousands(done)} / ${thousands(r.events_total)} events `) + sp("c", bar(frac, Math.max(8, cols - 12 - 30))) + sp("d", ` ${(frac * 100).toFixed(1)}%`)));
     lines.push(L("", sp("d", `engine wall clock at this frame ${(s.wallMs[f] / 1000).toFixed(2)}s │ sim/wall ${((s.frameT[f] / 1e9) / Math.max(0.001, s.wallMs[f] / 1000)).toFixed(0)}x`)));
-    this.body.innerHTML = lines.slice(0, this.rows).join("\n");
+    this.content.innerHTML = lines.slice(0, this.rows).join("\n");
     this.setTitle(`${m.engine.runner}`);
   }
 
@@ -98,7 +98,7 @@ export class EnginePanel extends Panel {
     lines.push(L("MEMORY", sp("w", `${stats.memMb.toFixed(1)} MB`) + sp("d", " │ 0 GC PAUSES")));
     lines.push(L("COMPLIANCE", sp("g", "SEC 605/606 & MiFID II AUDIT LOG ACTIVE")));
 
-    this.body.innerHTML = lines.join("\n");
+    this.content.innerHTML = lines.join("\n");
     this.setTitle(`open_hft_live_runner`);
   }
 
