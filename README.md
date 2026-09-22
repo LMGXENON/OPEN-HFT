@@ -1,10 +1,20 @@
 # Open-HFT
 
-An institutional market microstructure and execution forensics terminal built on top of [hftbacktest](https://github.com/nkaz001/hftbacktest) and direct market data feeds. It provides real-time Level 2 depth streaming across 800+ digital assets (including memecoins), US equities, commodities, ETFs, and FX, alongside nanosecond-accurate historical backtest replays.
+### Institutional Market Microstructure & High-Frequency Trading Terminal
+
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)](https://github.com/LMGXENON/OPEN-HRT)
+[![TypeScript 5.6](https://img.shields.io/badge/typescript-5.6-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org)
+[![Vite 6](https://img.shields.io/badge/vite-6.4-purple?style=flat-square&logo=vite)](https://vitejs.dev)
+[![Rust 1.80+](https://img.shields.io/badge/rust-1.80%2B-orange?style=flat-square&logo=rust)](https://www.rust-lang.org)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow?style=flat-square)](LICENSE)
+[![Zero Config](https://img.shields.io/badge/data-zero--api--keys-emerald?style=flat-square)](https://github.com/LMGXENON/OPEN-HRT)
+[![Compliance](https://img.shields.io/badge/compliance-SEC%20605%2F606%20%7C%20MiFID%20II-purple?style=flat-square)](docs/ARCHITECTURE.md)
+
+An open-source institutional market microstructure and execution forensics terminal built on top of [hftbacktest](https://github.com/nkaz001/hftbacktest) and direct market data feeds. It provides real-time Level 2 depth streaming across 800+ digital assets (including memecoins), US equities, commodities, ETFs, and FX, alongside nanosecond-accurate historical backtest replays.
 
 The terminal visualizes what high-frequency market-making algorithms see and decide frame by frame: the local order book ladder, resting orders with exchange-side queue estimates (`ahead | ours | behind`), feed and wire latencies, executions, order lifecycle logs, raw collector ingress, and kernel throughput statistics.
 
-![all nine panels](docs/shots/landscape_2560x1440.png)
+![Open-HFT Terminal](docs/shots/open_hft_terminal.png)
 
 ## Before you trade this
 
@@ -56,6 +66,23 @@ Every tile in the terminal is assigned an individual number. Clicking the tile n
 | **`8`** | **ENGINE** | Execution kernel metrics: throughput ticks per second, fill ratios, and memory footprint. |
 | **`9`** | **COLLECTOR** | Ingress telemetry: packet ingress rates, total payload bytes received, and sequence continuity. |
 
+## Quantitative Forensics Mathematics
+
+### Implementation Shortfall (IS)
+$$\text{IS}_{\text{bps}} = \text{Side} \times \left( \frac{P_{\text{fill}} - P_{\text{arrival}}}{P_{\text{arrival}}} \right) \times 10{,}000$$
+* $\text{Side} = +1$ for BUY, $-1$ for SELL.
+* Measures the true execution slippage relative to the prevailing mid-market price when the trading decision was originated.
+
+### Adverse Selection Markouts (+100ms, +1s, +5s, +30s)
+$$\text{Markout}_\tau = \text{Side} \times \left( \frac{P_{\text{mid}}(t + \tau) - P_{\text{fill}}}{P_{\text{fill}}} \right) \times 10{,}000$$
+* **Positive Markout**: Clean execution. The order captured spread, and the market drifted favorably after fill.
+* **Negative Markout**: Toxic fill. The order suffered the winner's curse where aggressive flow picked off passive quotes before an adverse market move.
+
+### Order Flow Imbalance (OFI)
+Following the Cont, Kukanov, and Stoikov microstructure framework:
+$$e_t = I(\Delta P_{b,t} \ge 0) \cdot q_{b,t} - I(\Delta P_{b,t} \le 0) \cdot q_{b,t-1} - \left[ I(\Delta P_{a,t} \le 0) \cdot q_{a,t} - I(\Delta P_{a,t} \ge 0) \cdot q_{a,t-1} \right]$$
+* Normalizes microsecond book dynamics into an institutional flow conviction indicator from `-100` (heavy sell pressure) to `+100` (heavy buy pressure).
+
 ## Quickstart
 
 ### Prerequisites
@@ -81,7 +108,7 @@ The terminal connects immediately to live market data with zero API keys require
 
 ## Setup (Rust Simulation Runner & Data Tools)
 
-To run custom backtests and record your own binary session archives:
+To run custom backtests and record binary session archives:
 
 ```bash
 # Prerequisites: Rust toolchain (https://rustup.rs) and Python 3.11+
@@ -112,7 +139,7 @@ cd dashboard && npm run dev
 
 | Parameter | Meaning |
 | --- | --- |
-| `symbol=<ticker>` | Active instrument (e.g. `BTCUSDT`, `PEPEUSDT`, `NVDA`, `GOLD`, `SPY`) |
+| `symbol=<ticker>` | Active instrument (e.g. `BTCUSDT`, `PEPEUSDT`, `NVDA`, `GOLD`, `SPY`, `JPM`) |
 | `mode=live\|replay` | Toggle between live streaming and historical session playback |
 | `session=<name>` | Which `.hbr` backtest session archive to load in replay mode |
 | `tile=<0-9>` | Isolate an individual tile full-screen (`0` for all tiles) |
@@ -132,6 +159,13 @@ cd dashboard && npm run dev
 | **`←` / `→`** | Step 5 seconds backward / forward (`Shift` for 30s) |
 | **`↑` / `↓`** | Increase / decrease replay playback speed |
 | **`ESC`** | Close security profile modal |
+
+## Regulatory Compliance Standards
+
+Open-HFT computes transaction cost benchmarks aligned with institutional execution mandates:
+* **SEC Rule 605/606**: Order routing quality, effective spread, and price improvement analysis.
+* **MiFID II RTS 27/28**: Best-Execution verification for trading desks and asset managers.
+* **SEC Rule 10b-18**: Safe Harbor volume caps and timing guardrails for corporate share repurchases.
 
 ## Star History
 
