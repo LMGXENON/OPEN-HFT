@@ -816,6 +816,18 @@ body {
 .mono { font-family: var(--font-mono); }
 
 /* Ladder & Depth Level Styling */
+/* The ladder body must have padding:0 and overflow:hidden so that:
+   - bar left: px values share the same origin as the pre-formatted text column
+   - no scrollbar appears and shifts clientWidth, causing cols to jitter */
+.panel > .body.ladder {
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+.work.single > .panel > .body.ladder,
+.work.focus > .panel > .body.ladder {
+  padding: 0 !important;
+  overflow: hidden !important;
+}
 .ladder {
   display: block;
   font-variant-numeric: tabular-nums;

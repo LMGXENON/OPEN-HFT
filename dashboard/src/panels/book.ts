@@ -175,24 +175,27 @@ export class BookPanel extends Panel {
       return;
     }
 
-
     const rows = this.rows;
     const cols = this.cols;
-    const key = `${state.symbol}|${state.bestBid}|${state.bestAsk}|${state.bids[0]?.qty}|${state.asks[0]?.qty}|${syntheticOrders.length}|${rows}|${cols}`;
-    if (!this.changed(key)) return;
+    const liveKey = `${state.symbol}|${state.bestBid}|${state.bestAsk}|${state.bids[0]?.qty}|${state.asks[0]?.qty}|${syntheticOrders.length}|${rows}|${cols}`;
+    if (!this.changed(liveKey)) return;
 
-    // Use full width of the tile with zero wasted margin
-    this.body.style.paddingLeft = "0px";
+    // Fixed symmetric layout — identical column geometry to replay render().
+    // Total visible chars: OURS_W + 1 + QTY_W + 1 + PX_W + 1 + QTY_W + 1 + OURS_W
+    const LADDER_W = OURS_W + 1 + QTY_W + 1 + PX_W + 1 + QTY_W + 1 + OURS_W; // 46
+    const padCols = Math.max(0, Math.floor((cols - LADDER_W) / 2));
+    this.body.style.paddingLeft = `${(padCols + 1) * CW}px`;
 
-    const PX_W = 10;
-    const centerCol = Math.floor(cols / 2);
-    const leftW = Math.max(14, centerCol - Math.floor(PX_W / 2));
-    const rightW = Math.max(14, cols - leftW - PX_W - 1);
+    // Bar anchor positions are relative to the padded body origin (paddingLeft).
+    // Bid bars grow left from the price column; ask bars grow right from it.
+    const leftBarRight = (OURS_W + 1 + QTY_W) * CW;       // right edge of bid qty area
+    const rightBarLeft = (OURS_W + 1 + QTY_W + 1 + PX_W + 1) * CW; // left edge of ask qty area
+    const barW = (OURS_W + 1 + QTY_W) * CW;
 
     const nAsk = Math.max(1, Math.floor((rows - 1) / 2));
     const nBid = Math.max(1, rows - 1 - nAsk);
 
-    // Dynamic depth expansion to 100% fill the entire vertical height of the panel
+    // Expand shallow books to fill all rows with synthetic depth.
     const tick = Math.max(0.0001, state.spreadPrice > 0 ? state.spreadPrice : (state.bestBid > 0 ? state.bestBid * 0.0005 : 0.01));
 
     const allAsks: Array<{ price: number; qty: number }> = [...state.asks];
@@ -221,27 +224,24 @@ export class BookPanel extends Panel {
     let maxQ = 1;
     for (const a of visibleAsks) maxQ = Math.max(maxQ, a.qty);
     for (const b of visibleBids) maxQ = Math.max(maxQ, b.qty);
-
-    const leftBarRight = leftW * CW;
-    const rightBarLeft = (leftW + PX_W + 1) * CW;
-    const leftBarW = leftW * CW;
-    const rightBarW = rightW * CW;
+    const widthOf = (q: number, side: "bid" | "ask") =>
+      Math.round(Math.sqrt(Math.min(1, q / maxQ)) * barW) * (side === "bid" ? 1 : 1);
 
     const out: string[] = [];
 
-    // Render Ask rows (top half)
+    // Ask rows — rendered top-to-bottom (highest ask first after reverse())
     for (const a of visibleAsks) {
       const isBest = Math.abs(a.price - state.bestAsk) < 0.0001;
-      const w = Math.round(Math.sqrt(Math.min(1, a.qty / maxQ)) * rightBarW);
-      const ours = syntheticOrders.find((o) => o.side === "SELL" && Math.abs(o.price - a.price) < 0.0001);
+      const w = widthOf(a.qty, "ask");
+      const o = syntheticOrders.find((x) => x.side === "SELL" && Math.abs(x.price - a.price) < 0.0001);
 
       let bars = "";
-      if (ours) {
-        const front = Math.max(0, ours.queueAhead);
-        const mine = Math.max(0, ours.qty);
+      if (o) {
+        const front = Math.max(0, o.queueAhead);
+        const mine = Math.max(0, o.qty);
         const behind = Math.max(0, a.qty - front - mine);
         const tot = Math.max(a.qty, front + mine + behind, 1e-12);
-        const wTot = Math.max(Math.round(Math.sqrt(Math.min(1, tot / maxQ)) * rightBarW), 3 * CW);
+        const wTot = Math.max(Math.round(Math.sqrt(Math.min(1, tot / maxQ)) * barW), 3 * CW);
         const wA = Math.round((front / tot) * wTot);
         const wM = Math.max(3, Math.round((mine / tot) * wTot));
         const wB = Math.max(0, wTot - wA - wM);
@@ -252,36 +252,39 @@ export class BookPanel extends Panel {
         bars += `<i class="bar ask" style="left:${rightBarLeft}px;width:${w}px"></i>`;
       }
 
+      // Layout: [OURS_W][ ][QTY_W][ ][PX_W][ ][QTY_W][ ][OURS_W]
+      // Ask:    <blank >  <blank >  <price>  <qty   >  <ours  >
       const pxs = fmtSmartPrice(a.price);
       const qs = fmtSmartQty(a.qty);
-      const pxHtml = sp(ours ? "ours" : isBest ? "w" : "ask", pxs.padStart(PX_W));
-      const oursTxt = ours ? sp("y", `»${fmtSmartQty(ours.qty)}`.padStart(7)) : " ".repeat(7);
-      const qtyCls = ours ? "w" : "ask";
-
-      const qtyAreaW = Math.max(8, rightW - 8);
-      const txt = " ".repeat(leftW) + " " + pxHtml + " " + sp(qtyCls, qs.padEnd(qtyAreaW)) + oursTxt;
+      const pxHtml = sp(o ? "ours" : isBest ? "w" : "ask", pxs.padStart(PX_W));
+      const oursTxt = o ? sp("y", `»${fmtSmartQty(o.qty)}`.padEnd(OURS_W)) : " ".repeat(OURS_W);
+      const txt =
+        " ".repeat(OURS_W) + " " +
+        " ".repeat(QTY_W) + " " +
+        pxHtml + " " +
+        sp(o ? "w" : "ask", qs.padEnd(QTY_W)) + " " +
+        oursTxt;
       out.push(`<div class="row${isBest ? " best" : ""}">${bars}<div class="txt">${txt}</div></div>`);
     }
 
-    // Spread row (middle)
+    // Spread row
     const spreadInfo = `spread ${fmtSmartPrice(state.spreadPrice)} (${state.spreadBps.toFixed(1)} bps)  mid ${fmtSmartPrice(state.midPrice)}`;
-    const padSpread = Math.max(0, Math.floor((cols - spreadInfo.length) / 2));
-    const spreadTxt = " ".repeat(padSpread) + spreadInfo;
-    out.push(`<div class="row spread">${esc(spreadTxt)}</div>`);
+    const padSpread = Math.max(0, Math.floor((LADDER_W - spreadInfo.length) / 2));
+    out.push(`<div class="row spread">${esc(" ".repeat(padSpread) + spreadInfo)}</div>`);
 
-    // Render Bid rows (bottom half)
+    // Bid rows — rendered top-to-bottom (best bid first)
     for (const b of visibleBids) {
       const isBest = Math.abs(b.price - state.bestBid) < 0.0001;
-      const w = Math.round(Math.sqrt(Math.min(1, b.qty / maxQ)) * leftBarW);
-      const ours = syntheticOrders.find((o) => o.side === "BUY" && Math.abs(o.price - b.price) < 0.0001);
+      const w = widthOf(b.qty, "bid");
+      const o = syntheticOrders.find((x) => x.side === "BUY" && Math.abs(x.price - b.price) < 0.0001);
 
       let bars = "";
-      if (ours) {
-        const front = Math.max(0, ours.queueAhead);
-        const mine = Math.max(0, ours.qty);
+      if (o) {
+        const front = Math.max(0, o.queueAhead);
+        const mine = Math.max(0, o.qty);
         const behind = Math.max(0, b.qty - front - mine);
         const tot = Math.max(b.qty, front + mine + behind, 1e-12);
-        const wTot = Math.max(Math.round(Math.sqrt(Math.min(1, tot / maxQ)) * leftBarW), 3 * CW);
+        const wTot = Math.max(Math.round(Math.sqrt(Math.min(1, tot / maxQ)) * barW), 3 * CW);
         const wA = Math.round((front / tot) * wTot);
         const wM = Math.max(3, Math.round((mine / tot) * wTot));
         const wB = Math.max(0, wTot - wA - wM);
@@ -292,14 +295,18 @@ export class BookPanel extends Panel {
         bars += `<i class="bar bid" style="left:${leftBarRight - w}px;width:${w}px"></i>`;
       }
 
+      // Layout: [OURS_W][ ][QTY_W][ ][PX_W][ ][QTY_W][ ][OURS_W]
+      // Bid:    <ours  >  <qty   >  <price>  <blank >  <blank >
       const pxs = fmtSmartPrice(b.price);
       const qs = fmtSmartQty(b.qty);
-      const pxHtml = sp(ours ? "ours" : isBest ? "w" : "bid", pxs.padStart(PX_W));
-      const oursTxt = ours ? sp("y", `»${fmtSmartQty(ours.qty)}`.padEnd(7)) : " ".repeat(7);
-      const qtyCls = ours ? "w" : "bid";
-
-      const qtyAreaW = Math.max(8, leftW - 8);
-      const txt = oursTxt + sp(qtyCls, qs.padStart(qtyAreaW)) + " " + pxHtml;
+      const pxHtml = sp(o ? "ours" : isBest ? "w" : "bid", pxs.padStart(PX_W));
+      const oursTxt = o ? sp("y", `»${fmtSmartQty(o.qty)}`.padStart(OURS_W)) : " ".repeat(OURS_W);
+      const txt =
+        oursTxt + " " +
+        sp(o ? "w" : "bid", qs.padStart(QTY_W)) + " " +
+        pxHtml + " " +
+        " ".repeat(QTY_W) + " " +
+        " ".repeat(OURS_W);
       out.push(`<div class="row${isBest ? " best" : ""}">${bars}<div class="txt">${txt}</div></div>`);
     }
 
