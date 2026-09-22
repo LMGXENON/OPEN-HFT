@@ -699,8 +699,8 @@ body {
   width: 100% !important;
   height: calc(100% - 25px) !important;
   min-height: 0 !important;
-  overflow: auto !important;
-  padding: 6px 10px !important;
+  overflow: hidden !important;
+  padding: 4px 6px !important;
 }
 
 /* ==========================================================================
@@ -762,7 +762,7 @@ body {
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
-  padding: 6px 10px;
+  padding: 4px 6px;
   white-space: pre;
   position: relative;
   background: var(--bg-panel-body);
