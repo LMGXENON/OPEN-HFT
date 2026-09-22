@@ -1,0 +1,30 @@
+{
+  "name": "open-hft",
+  "version": "1.0.0",
+  "description": "Institutional Execution Forensics & Market Microstructure Terminal for Transaction Cost Analysis (TCA) and High-Frequency Forensics",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "market-microstructure",
+    "trading-terminal",
+    "transaction-cost-analysis",
+    "tca",
+    "order-flow-imbalance",
+    "hft",
+    "quantitative-finance",
+    "best-execution",
+    "order-book",
+    "trading-engine"
+  ],
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5180",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 5180"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.0"
+  }
+}
