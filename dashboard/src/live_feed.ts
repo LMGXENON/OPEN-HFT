@@ -530,22 +530,24 @@ export class LiveMarketFeed {
       const bestBid = Math.round((currentPrice - spread / 2) / tick) * tick;
       const bestAsk = Math.round((currentPrice + spread / 2) / tick) * tick;
 
-      // Populate 20-level book
+      // Populate 60-level book to fill full vertical panel height
+      const NUM_LEVELS = 60;
       const bids: BookLevel[] = [];
       const asks: BookLevel[] = [];
-      // Populate 20-level book in-place without allocations
-      while (this.state.bids.length < 20) this.state.bids.push({ price: 0, qty: 0 });
-      while (this.state.asks.length < 20) this.state.asks.push({ price: 0, qty: 0 });
-      this.state.bids.length = 20;
-      this.state.asks.length = 20;
+      while (this.state.bids.length < NUM_LEVELS) this.state.bids.push({ price: 0, qty: 0 });
+      while (this.state.asks.length < NUM_LEVELS) this.state.asks.push({ price: 0, qty: 0 });
+      this.state.bids.length = NUM_LEVELS;
+      this.state.asks.length = NUM_LEVELS;
 
-      for (let i = 0; i < 20; i++) {
-        bids.push({ price: bestBid - i * tick, qty: (1.5 + Math.random() * 5) * this.security.lotSize * 10 });
-        asks.push({ price: bestAsk + i * tick, qty: (1.5 + Math.random() * 5) * this.security.lotSize * 10 });
+      for (let i = 0; i < NUM_LEVELS; i++) {
+        const bQty = (1.5 + Math.random() * 5) * this.security.lotSize * 10;
+        const aQty = (1.5 + Math.random() * 5) * this.security.lotSize * 10;
+        bids.push({ price: bestBid - i * tick, qty: bQty });
+        asks.push({ price: bestAsk + i * tick, qty: aQty });
         this.state.bids[i].price = bestBid - i * tick;
-        this.state.bids[i].qty = (1.5 + Math.random() * 5) * this.security.lotSize * 10;
+        this.state.bids[i].qty = bQty;
         this.state.asks[i].price = bestAsk + i * tick;
-        this.state.asks[i].qty = (1.5 + Math.random() * 5) * this.security.lotSize * 10;
+        this.state.asks[i].qty = aQty;
       }
 
       this.state.bids = bids;

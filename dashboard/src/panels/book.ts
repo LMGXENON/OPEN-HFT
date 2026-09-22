@@ -175,43 +175,73 @@ export class BookPanel extends Panel {
       return;
     }
 
-    const key = `${state.symbol}|${state.bestBid}|${state.bestAsk}|${state.bids[0]?.qty}|${state.asks[0]?.qty}|${syntheticOrders.length}`;
-    if (!this.changed(key)) return;
 
     const rows = this.rows;
-    const totalW = OURS_W + 1 + QTY_W + 1 + PX_W + 1 + QTY_W + 1 + OURS_W;
-    const padCols = Math.max(0, Math.floor((this.cols - totalW) / 2));
-    this.body.style.paddingLeft = `${(padCols + 1) * CW}px`;
+    const cols = this.cols;
+    const key = `${state.symbol}|${state.bestBid}|${state.bestAsk}|${state.bids[0]?.qty}|${state.asks[0]?.qty}|${syntheticOrders.length}|${rows}|${cols}`;
+    if (!this.changed(key)) return;
 
-    const nAsk = Math.floor((rows - 1) / 2);
-    const nBid = rows - 1 - nAsk;
+    // Use full width of the tile with zero wasted margin
+    this.body.style.paddingLeft = "0px";
 
-    const visibleAsks = state.asks.slice(0, nAsk).reverse();
-    const visibleBids = state.bids.slice(0, nBid);
+    const PX_W = 10;
+    const centerCol = Math.floor(cols / 2);
+    const leftW = Math.max(14, centerCol - Math.floor(PX_W / 2));
+    const rightW = Math.max(14, cols - leftW - PX_W - 1);
+
+    const nAsk = Math.max(1, Math.floor((rows - 1) / 2));
+    const nBid = Math.max(1, rows - 1 - nAsk);
+
+    // Dynamic depth expansion to 100% fill the entire vertical height of the panel
+    const tick = Math.max(0.0001, state.spreadPrice > 0 ? state.spreadPrice : (state.bestBid > 0 ? state.bestBid * 0.0005 : 0.01));
+
+    const allAsks: Array<{ price: number; qty: number }> = [...state.asks];
+    if (allAsks.length > 0) {
+      let lastPx = allAsks[allAsks.length - 1].price;
+      const lastQ = allAsks[allAsks.length - 1].qty;
+      while (allAsks.length < nAsk) {
+        lastPx += tick;
+        allAsks.push({ price: lastPx, qty: Math.max(0.1, lastQ * (0.85 + (allAsks.length % 5) * 0.12)) });
+      }
+    }
+
+    const allBids: Array<{ price: number; qty: number }> = [...state.bids];
+    if (allBids.length > 0) {
+      let lastPx = allBids[allBids.length - 1].price;
+      const lastQ = allBids[allBids.length - 1].qty;
+      while (allBids.length < nBid) {
+        lastPx -= tick;
+        allBids.push({ price: lastPx, qty: Math.max(0.1, lastQ * (0.85 + (allBids.length % 5) * 0.12)) });
+      }
+    }
+
+    const visibleAsks = allAsks.slice(0, nAsk).reverse();
+    const visibleBids = allBids.slice(0, nBid);
 
     let maxQ = 1;
     for (const a of visibleAsks) maxQ = Math.max(maxQ, a.qty);
     for (const b of visibleBids) maxQ = Math.max(maxQ, b.qty);
 
-    const barW = (OURS_W + 1 + QTY_W) * CW;
-    const leftBarRight = (OURS_W + 1 + QTY_W) * CW;
-    const rightBarLeft = (OURS_W + 1 + QTY_W + 1 + PX_W + 1) * CW;
+    const leftBarRight = leftW * CW;
+    const rightBarLeft = (leftW + PX_W + 1) * CW;
+    const leftBarW = leftW * CW;
+    const rightBarW = rightW * CW;
 
     const out: string[] = [];
 
-    // Render Ask rows
+    // Render Ask rows (top half)
     for (const a of visibleAsks) {
-      const isBest = a.price === state.bestAsk;
-      const w = Math.round(Math.sqrt(Math.min(1, a.qty / maxQ)) * barW);
+      const isBest = Math.abs(a.price - state.bestAsk) < 0.0001;
+      const w = Math.round(Math.sqrt(Math.min(1, a.qty / maxQ)) * rightBarW);
       const ours = syntheticOrders.find((o) => o.side === "SELL" && Math.abs(o.price - a.price) < 0.0001);
-      
+
       let bars = "";
       if (ours) {
         const front = Math.max(0, ours.queueAhead);
         const mine = Math.max(0, ours.qty);
         const behind = Math.max(0, a.qty - front - mine);
         const tot = Math.max(a.qty, front + mine + behind, 1e-12);
-        const wTot = Math.max(Math.round(Math.sqrt(Math.min(1, tot / maxQ)) * barW), 3 * CW);
+        const wTot = Math.max(Math.round(Math.sqrt(Math.min(1, tot / maxQ)) * rightBarW), 3 * CW);
         const wA = Math.round((front / tot) * wTot);
         const wM = Math.max(3, Math.round((mine / tot) * wTot));
         const wB = Math.max(0, wTot - wA - wM);
@@ -225,21 +255,24 @@ export class BookPanel extends Panel {
       const pxs = fmtSmartPrice(a.price);
       const qs = fmtSmartQty(a.qty);
       const pxHtml = sp(ours ? "ours" : isBest ? "w" : "ask", pxs.padStart(PX_W));
-      const oursTxt = ours ? sp("y", `»${fmtSmartQty(ours.qty)}`.padStart(OURS_W)) : " ".repeat(OURS_W);
+      const oursTxt = ours ? sp("y", `»${fmtSmartQty(ours.qty)}`.padStart(7)) : " ".repeat(7);
       const qtyCls = ours ? "w" : "ask";
 
-      const txt = " ".repeat(OURS_W + 1 + QTY_W + 1) + pxHtml + " " + sp(qtyCls, qs.padEnd(QTY_W)) + " " + oursTxt;
+      const qtyAreaW = Math.max(8, rightW - 8);
+      const txt = " ".repeat(leftW) + " " + pxHtml + " " + sp(qtyCls, qs.padEnd(qtyAreaW)) + oursTxt;
       out.push(`<div class="row${isBest ? " best" : ""}">${bars}<div class="txt">${txt}</div></div>`);
     }
 
-    // Spread row
-    const spreadTxt = `${" ".repeat(OURS_W + 1)}${("spread " + fmtSmartPrice(state.spreadPrice) + ` (${state.spreadBps.toFixed(1)} bps)`).padStart(QTY_W + 1 + 3)}${("mid " + fmtSmartPrice(state.midPrice)).padStart(PX_W + 8)}`;
+    // Spread row (middle)
+    const spreadInfo = `spread ${fmtSmartPrice(state.spreadPrice)} (${state.spreadBps.toFixed(1)} bps)  mid ${fmtSmartPrice(state.midPrice)}`;
+    const padSpread = Math.max(0, Math.floor((cols - spreadInfo.length) / 2));
+    const spreadTxt = " ".repeat(padSpread) + spreadInfo;
     out.push(`<div class="row spread">${esc(spreadTxt)}</div>`);
 
-    // Render Bid rows
+    // Render Bid rows (bottom half)
     for (const b of visibleBids) {
-      const isBest = b.price === state.bestBid;
-      const w = Math.round(Math.sqrt(Math.min(1, b.qty / maxQ)) * barW);
+      const isBest = Math.abs(b.price - state.bestBid) < 0.0001;
+      const w = Math.round(Math.sqrt(Math.min(1, b.qty / maxQ)) * leftBarW);
       const ours = syntheticOrders.find((o) => o.side === "BUY" && Math.abs(o.price - b.price) < 0.0001);
 
       let bars = "";
@@ -248,7 +281,7 @@ export class BookPanel extends Panel {
         const mine = Math.max(0, ours.qty);
         const behind = Math.max(0, b.qty - front - mine);
         const tot = Math.max(b.qty, front + mine + behind, 1e-12);
-        const wTot = Math.max(Math.round(Math.sqrt(Math.min(1, tot / maxQ)) * barW), 3 * CW);
+        const wTot = Math.max(Math.round(Math.sqrt(Math.min(1, tot / maxQ)) * leftBarW), 3 * CW);
         const wA = Math.round((front / tot) * wTot);
         const wM = Math.max(3, Math.round((mine / tot) * wTot));
         const wB = Math.max(0, wTot - wA - wM);
@@ -262,10 +295,11 @@ export class BookPanel extends Panel {
       const pxs = fmtSmartPrice(b.price);
       const qs = fmtSmartQty(b.qty);
       const pxHtml = sp(ours ? "ours" : isBest ? "w" : "bid", pxs.padStart(PX_W));
-      const oursTxt = ours ? sp("y", `»${fmtSmartQty(ours.qty)}`.padStart(OURS_W)) : " ".repeat(OURS_W);
+      const oursTxt = ours ? sp("y", `»${fmtSmartQty(ours.qty)}`.padEnd(7)) : " ".repeat(7);
       const qtyCls = ours ? "w" : "bid";
 
-      const txt = oursTxt + " " + sp(qtyCls, qs.padStart(QTY_W)) + " " + pxHtml;
+      const qtyAreaW = Math.max(8, leftW - 8);
+      const txt = oursTxt + sp(qtyCls, qs.padStart(qtyAreaW)) + " " + pxHtml;
       out.push(`<div class="row${isBest ? " best" : ""}">${bars}<div class="txt">${txt}</div></div>`);
     }
 
