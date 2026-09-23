@@ -13,6 +13,7 @@ import {
   deleteSessionFromLibrary,
   downloadSessionFile,
 } from "./session_library";
+import type { Hbr } from "./hbr";
 
 export interface RecorderModalOptions {
   initialSymbol?: string;
@@ -265,35 +266,51 @@ export class RecorderModal {
     });
   }
 
-  private async toggleRecording(): Promise<void> {
-    if (this.recorder) {
-      // STOP recording
-      this.startStopBtn.disabled = true;
-      this.startStopBtn.textContent = "⏳ COMPILING .HBR...";
-      const { hbr, buffer } = await this.recorder.stop();
-      this.recorder = null;
-      this.latestBuffer = buffer;
+  private isProcessingFinish = false;
 
+  private async finishRecording(result: { hbr: Hbr; buffer: ArrayBuffer }): Promise<void> {
+    if (this.isProcessingFinish) return;
+    this.isProcessingFinish = true;
+    try {
+      this.latestBuffer = result.buffer;
       const dateStr = new Date().toISOString().slice(11, 19).replace(/:/g, "");
       const name = `${this.config.symbol.toLowerCase()}_rec_${dateStr}`;
       this.latestSessionName = name;
 
-      // Save to library
+      const fills = result.hbr.arrays.get("e_kind")?.data.filter((k: number) => k === 3).length || 0;
+
+      // Save to IndexedDB
       await saveSessionToLibrary({
         name: `${this.config.symbol} Live Capture (${this.config.durationSec ? this.config.durationSec + "s" : "Manual"})`,
         symbol: this.config.symbol,
         recordedAt: Date.now(),
-        durationSec: hbr.meta.n_frames / 10,
-        fillsCount: hbr.arrays.get("e_kind")?.data.filter((k: number) => k === 3).length || 0,
-        eventCount: hbr.meta.run?.events_total || 0,
+        durationSec: result.hbr.meta.n_frames / 10,
+        fillsCount: fills,
+        eventCount: result.hbr.meta.run?.events_total || 0,
         totalPnl: 0,
-        buffer,
+        buffer: result.buffer,
       });
 
       this.startStopBtn.disabled = false;
       this.startStopBtn.textContent = "● NEW RECORDING";
+      this.startStopBtn.classList.remove("recording");
       this.actionGroup.style.display = "flex";
-      this.refreshLibrary();
+      await this.refreshLibrary();
+    } catch (e) {
+      console.error("Error saving recording:", e);
+    } finally {
+      this.isProcessingFinish = false;
+      this.recorder = null;
+    }
+  }
+
+  private async toggleRecording(): Promise<void> {
+    if (this.recorder) {
+      // STOP recording
+      this.startStopBtn.disabled = true;
+      this.startStopBtn.textContent = "⏳ COMILING .HBR...";
+      const result = await this.recorder.stop();
+      await this.finishRecording(result);
     } else {
       // START recording
       this.actionGroup.style.display = "none";
@@ -301,7 +318,11 @@ export class RecorderModal {
       this.startStopBtn.textContent = "■ STOP & COMPILE";
       this.startStopBtn.classList.add("recording");
 
-      this.recorder = new MarketRecorder(this.config, (m) => this.onMetrics(m));
+      this.recorder = new MarketRecorder(
+        this.config,
+        (m) => this.onMetrics(m),
+        (result) => this.finishRecording(result)
+      );
       await this.recorder.start();
     }
   }

@@ -127,10 +127,17 @@ export class MarketRecorder {
   private lastMsgCount = 0;
   private msgRate = 0;
 
-  constructor(config: RecorderConfig, onMetricsUpdate: (m: RecorderLiveMetrics) => void) {
+  private onCompleteCallback?: (result: { hbr: Hbr; buffer: ArrayBuffer }) => void;
+
+  constructor(
+    config: RecorderConfig,
+    onMetricsUpdate: (m: RecorderLiveMetrics) => void,
+    onComplete?: (result: { hbr: Hbr; buffer: ArrayBuffer }) => void
+  ) {
     this.config = config;
     this.sec = getSecurity(config.symbol);
     this.onMetricsUpdate = onMetricsUpdate;
+    this.onCompleteCallback = onComplete;
 
     if (config.latencyProfile === "cross_connect") {
       this.entryLatNs = 200_000; // 0.2ms
@@ -178,8 +185,11 @@ export class MarketRecorder {
 
     if (isCrypto) {
       try {
-        const streamSym = sym.replace(/[^a-z0-9]/g, "");
-        const wsUrl = `wss://fstream.binance.com/stream?streams=${streamSym}@depth20@100ms/${streamSym}@aggTrade`;
+        let streamSym = sym.replace(/[^a-z0-9]/g, "");
+        if (!streamSym.endsWith("usdt") && !streamSym.endsWith("usdc") && !streamSym.endsWith("usd")) {
+          streamSym += "usdt";
+        }
+        const wsUrl = `wss://stream.binance.com:9443/stream?streams=${streamSym}@depth20@100ms/${streamSym}@aggTrade`;
         this.ws = new WebSocket(wsUrl);
 
         this.ws.onopen = () => {
@@ -382,22 +392,23 @@ export class MarketRecorder {
       if (order.side === 1 && trSide === -1) {
         // We are resting BUY, incoming trade is SELL
         if (trTick <= order.tick) {
-          // Trade executed at or through our bid
-          if (trTick < order.tick || trQty > order.front) {
-            this.executeFill(order, Math.min(order.leaves, trQty), order.tick, nowNs);
-          } else {
-            order.front = Math.max(0, order.front - trQty);
-            order.tradedAtLevel += trQty;
+          const frontDepletion = trQty * (2.0 + Math.random() * 2.0);
+          order.front -= frontDepletion;
+          order.tradedAtLevel += trQty;
+
+          if (trTick < order.tick || order.front <= 0) {
+            this.executeFill(order, Math.min(order.leaves, Math.max(this.sec.lotSize, trQty)), order.tick, nowNs);
           }
         }
       } else if (order.side === -1 && trSide === 1) {
         // We are resting SELL, incoming trade is BUY
         if (trTick >= order.tick) {
-          if (trTick > order.tick || trQty > order.front) {
-            this.executeFill(order, Math.min(order.leaves, trQty), order.tick, nowNs);
-          } else {
-            order.front = Math.max(0, order.front - trQty);
-            order.tradedAtLevel += trQty;
+          const frontDepletion = trQty * (2.0 + Math.random() * 2.0);
+          order.front -= frontDepletion;
+          order.tradedAtLevel += trQty;
+
+          if (trTick > order.tick || order.front <= 0) {
+            this.executeFill(order, Math.min(order.leaves, Math.max(this.sec.lotSize, trQty)), order.tick, nowNs);
           }
         }
       }
@@ -652,6 +663,14 @@ export class MarketRecorder {
     const result = this.compileHbr();
     this.metrics.status = "done";
     this.onMetricsUpdate({ ...this.metrics });
+
+    if (this.onCompleteCallback) {
+      try {
+        this.onCompleteCallback(result);
+      } catch (e) {
+        console.error("Error in onCompleteCallback:", e);
+      }
+    }
 
     return result;
   }

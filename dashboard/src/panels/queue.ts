@@ -133,7 +133,9 @@ export class QueuePanel extends Panel {
       for (let i = o0; i < o1; i++) if (s.oStatus[i] === ST.NEW) n++;
       return n;
     })();
-    this.setTitle(`${acked} resting / ${live} working ${esc("│")} ${s.meta.models.queue.kind}${s.meta.models.queue.n !== undefined ? " n=" + s.meta.models.queue.n : ""}`);
+    const qKind = s.meta?.models?.queue?.kind || "PowerProbQueueFunc3";
+    const qN = s.meta?.models?.queue?.n !== undefined ? ` n=${s.meta.models.queue.n}` : "";
+    this.setTitle(`${acked} resting / ${live} working ${esc("│")} ${qKind}${qN}`);
   }
 
   private statsN = -1;
