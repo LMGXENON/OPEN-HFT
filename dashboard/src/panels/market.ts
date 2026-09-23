@@ -262,16 +262,20 @@ export class MarketPanel extends Panel {
     ctx.arc(tip.x, tip.y, 3.5, 0, Math.PI * 2);
     ctx.fill();
 
+    const monoFont = 'ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace';
+
     // 6. Text Overlay: Crisp White Prices, Green/Red Pct, Cyan Spread
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 11px monospace";
-    ctx.fillText(`${state.symbol}  ${fmtSmartPrice(state.lastPrice)}`, 10, 16);
+    ctx.font = `bold 11px ${monoFont}`;
+    const symW = ctx.measureText(state.symbol + " ").width;
+    ctx.fillText(state.symbol, 10, 16);
+    ctx.fillText(fmtSmartPrice(state.lastPrice), 10 + symW, 16);
     
     ctx.fillStyle = isUp ? "#00e676" : "#ff3344";
     ctx.fillText(`${isUp ? "+" : ""}${state.priceChangePct24h.toFixed(2)}%`, 140, 16);
 
     ctx.fillStyle = "#00e5ff";
-    ctx.font = "10px monospace";
+    ctx.font = `10px ${monoFont}`;
     ctx.fillText(`SPREAD: ${state.spreadBps.toFixed(2)} bps`, 10, 30);
 
     const hi24 = (state.high24h && state.high24h > 0) ? state.high24h : state.lastPrice * 1.018;
@@ -280,7 +284,7 @@ export class MarketPanel extends Panel {
     const volStr = vol >= 1e9 ? `$${(vol / 1e9).toFixed(2)}B` : vol >= 1e6 ? `$${(vol / 1e6).toFixed(1)}M` : `$${vol.toLocaleString()}`;
 
     ctx.fillStyle = "#94a3b8";
-    ctx.font = "10px monospace";
+    ctx.font = `10px ${monoFont}`;
     ctx.fillText(`24H HIGH: ${fmtSmartPrice(hi24)}   24H LOW: ${fmtSmartPrice(lo24)}   VOL: ${volStr}`, 10, H - 10);
 
     this.setTitle(`MARKET: ${state.symbol} (${fmtSmartPrice(state.lastPrice)})`);
