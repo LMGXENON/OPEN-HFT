@@ -1,6 +1,6 @@
-# Contributing to Stratum
+# Contributing to Open-HRT
 
-Thank you for your interest in contributing to **Stratum**! We are building an open-source, institutional-grade alternative to \$2,500/month proprietary financial terminals, specializing in nanosecond market microstructure, Transaction Cost Analysis (TCA), and execution quality forensics.
+Thank you for your interest in contributing to **Open-HRT**! We are building an open-source, institutional-grade alternative to \$2,500/month proprietary financial terminals, specializing in nanosecond market microstructure, Transaction Cost Analysis (TCA), and execution quality forensics.
 
 Whether you are a Quantitative Developer, Market Making Researcher, Front-End Engineer, or Capital Markets Specialist, your contributions are warmly welcomed.
 
@@ -17,10 +17,10 @@ Whether you are a Quantitative Developer, Market Making Researcher, Front-End En
 
 ## 🛠️ Development Setup
 
-Stratum is architected as a modular monorepo:
+Open-HRT is architected as a modular monorepo:
 
 ```
-stratum/
+open-hrt/
 ├── runner/          # Rust simulation core & .hbr binary frame recorder
 ├── dashboard/       # Vite + TypeScript Institutional Terminal frontend
 ├── tools/           # Python ingestion, gzip recovery, and data converters

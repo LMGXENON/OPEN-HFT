@@ -1,11 +1,11 @@
 name: Bug Report
-description: Report an issue, rendering error, or execution discrepancy in Stratum.
+description: Report an issue, rendering error, or execution discrepancy in Open-HRT.
 labels: ["bug", "triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thank you for reporting an issue in Stratum. Please ensure you are testing against the latest `main` commit.
+        Thank you for reporting an issue in Open-HRT. Please ensure you are testing against the latest `main` commit.
   - type: dropdown
     id: component
     attributes:

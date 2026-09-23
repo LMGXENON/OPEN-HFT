@@ -1,5 +1,5 @@
 /**
- * StratumTCA Markout Forensics Panel
+ * Open-HRTTCA Markout Forensics Panel
  * Visualizes post-trade price drift across multiple horizons (+100ms to +30s)
  * to diagnose adverse selection and toxic flow.
  */

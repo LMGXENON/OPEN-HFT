@@ -1,5 +1,5 @@
 /**
- * Stratum Institutional Terminal Navigation Bar
+ * Open-HRT Institutional Terminal Navigation Bar
  * Features:
  * - Clean institutional header with mode switch (LIVE vs REPLAY)
  * - Universal Asset & Company Search (800+ crypto pairs, memecoins, stocks, commodities, ETFs, FX)
@@ -69,14 +69,14 @@ export class NavBar {
     // Left Brand
     const brand = el("div", "term-brand", topRow);
     brand.innerHTML = `
-      <span class="brand-title">OPEN-HFT</span>
+      <span class="brand-title">OPEN-HRT</span>
       <span class="brand-tag">BACKTEST</span>
     `;
 
     // Dedicated Backtest Badge (no toggle button)
     const modeBadge = el("div", "term-mode-badge", topRow);
     modeBadge.innerHTML = `<span class="mode-dot replay"></span><span class="mode-label">BACKTEST</span>`;
-    modeBadge.title = "OPEN-HFT Quantitative Microstructure Replay & Backtest Engine";
+    modeBadge.title = "OPEN-HRT Quantitative Microstructure Replay & Backtest Engine";
 
     // Center Universal Search Command Box
     const searchContainer = el("div", "term-search-container", topRow);

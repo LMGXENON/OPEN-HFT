@@ -19,7 +19,7 @@ export class EnginePanel extends Panel {
     const cols = this.cols;
     const L = (k: string, v: string) => sp("d", lj(k, 9)) + v;
     const lines: string[] = [];
-    lines.push(L("ENGINE", sp("w", `${m.engine?.name ?? "OPEN-HFT"} ${m.engine?.crate_version ?? "v1.0.0"}`) + sp("d", ` │ ${m.engine?.rustc ? m.engine.rustc.slice(0, 14) : "rustc 1.80+"}`)));
+    lines.push(L("ENGINE", sp("w", `${m.engine?.name ?? "OPEN-HRT"} ${m.engine?.crate_version ?? "v1.0.0"}`) + sp("d", ` │ ${m.engine?.rustc ? m.engine.rustc.slice(0, 14) : "rustc 1.80+"}`)));
     lines.push(L("MARKET", sp("amber", `${m.symbol ?? s.meta.symbol ?? "BTCUSDT"}`) + sp("d", ` │ tick ${s.tickSize} │ lot ${s.lotSize}`)));
     lines.push(L("VENUE", sp("w", `${m.exchange ?? "DIRECT DMA"}`) + sp("d", ` │ ${m.models?.exchange ?? "L2 DMA feed"}`)));
     
@@ -46,7 +46,7 @@ export class EnginePanel extends Panel {
     lines.push(L("SPEED", sp("w", `${c.playing ? "► PLAY" : "‖ PAUSE"}`) + sp("d", ` │ x${c.speed} │ wall ${(s.wallMs[f] / 1000).toFixed(1)}s`)));
 
     this.content.innerHTML = lines.slice(0, this.rows).join("\n");
-    this.setTitle(`${m.engine?.runner ?? "open_hft_engine"}`);
+    this.setTitle(`${m.engine?.runner ?? "open_hrt_engine"}`);
   }
 
   renderLive(stats: { symbol: string; uptimeSec: number; ticksPerSec: number; orderCount: number; fillCount: number; memMb: number; latencyMs: number }): void {
@@ -56,7 +56,7 @@ export class EnginePanel extends Panel {
     const L = (k: string, v: string) => sp("d", lj(k, 10)) + v;
     const lines: string[] = [];
 
-    lines.push(L("ENGINE", sp("w", "OPEN-HFT EXECUTION KERNEL v1.0.0") + sp("d", " │ ZERO-ALLOCATION CORE")));
+    lines.push(L("ENGINE", sp("w", "OPEN-HRT EXECUTION KERNEL v1.0.0") + sp("d", " │ ZERO-ALLOCATION CORE")));
     lines.push(L("STATUS", sp("g", "RUNNING (ULTRA-LOW LATENCY)") + sp("d", ` │ UPTIME: ${stats.uptimeSec}s`)));
     lines.push(L("MARKET", sp("amber", stats.symbol) + sp("d", ` │ VENUE: DIRECT DMA`)));
     lines.push(L("THROUGHPUT", sp("amber", `${stats.ticksPerSec.toLocaleString()} ticks/sec`) + sp("d", ` │ LATENCY: ${stats.latencyMs.toFixed(1)}ms`)));
@@ -67,6 +67,6 @@ export class EnginePanel extends Panel {
     lines.push(L("COMPLIANCE", sp("g", "SEC 605/606 & MiFID II AUDIT LOG ACTIVE")));
 
     this.content.innerHTML = lines.join("\n");
-    this.setTitle(`open_hft_live_runner`);
+    this.setTitle(`open_hrt_live_runner`);
   }
 }

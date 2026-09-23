@@ -1,5 +1,5 @@
 /**
- * StratumTCA Analytics Engine
+ * Open-HRTTCA Analytics Engine
  * Institutional Transaction Cost Analysis (TCA), Best-Execution (Best-Ex),
  * Implementation Shortfall (IS), and Post-Trade Adverse Selection Forensics.
  */

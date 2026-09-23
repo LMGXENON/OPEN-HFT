@@ -1,8 +1,8 @@
 [package]
-name = "stratum-runner"
+name = "open-hrt-runner"
 version = "1.0.0"
 edition = "2024"
-description = "High-performance market microstructure and execution simulation engine for Stratum"
+description = "High-performance market microstructure and execution simulation engine for Open-HRT"
 
 [dependencies]
 hftbacktest = { path = "../hftbacktest/hftbacktest", default-features = false, features = ["backtest"] }

@@ -1,5 +1,5 @@
 {
-  "name": "open-hft",
+  "name": "open-hrt",
   "version": "1.0.0",
   "description": "Institutional Execution Forensics & Market Microstructure Terminal for Transaction Cost Analysis (TCA) and High-Frequency Forensics",
   "private": true,

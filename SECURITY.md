@@ -11,12 +11,12 @@ We release security patches and critical dependency fixes for the following vers
 
 ## Reporting a Vulnerability
 
-The Stratum team takes security and execution integrity seriously. If you discover a security vulnerability, execution discrepancy, or denial-of-service issue in Stratum (including WebSocket handling or serialization logic), please do **NOT** open a public issue.
+The Open-HRT team takes security and execution integrity seriously. If you discover a security vulnerability, execution discrepancy, or denial-of-service issue in Open-HRT (including WebSocket handling or serialization logic), please do **NOT** open a public issue.
 
 Instead, please report it via one of the following methods:
 
 1. **GitHub Private Security Advisory**: Navigate to the **Security** tab of this repository and click **"Report a vulnerability"**.
-2. **Email**: Send encrypted or plain details to `security@stratumtca.org`.
+2. **Email**: Send encrypted or plain details to `security@open-hrttca.org`.
 
 ### What to Include in Your Report
 - A description of the issue and its potential impact.

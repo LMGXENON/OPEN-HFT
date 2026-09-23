@@ -1,5 +1,5 @@
 {
-  "name": "open-hft-root",
+  "name": "open-hrt-root",
   "version": "1.0.0",
   "scripts": {
     "install:all": "cd dashboard && npm install && cd ../data-hub && npm install",

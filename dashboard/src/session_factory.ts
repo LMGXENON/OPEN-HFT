@@ -1,5 +1,5 @@
 /**
- * Open-HFT Dynamic Asset Backtest Session Factory
+ * Open-HRT Dynamic Asset Backtest Session Factory
  *
  * Scales the baseline microstructural recording trajectory (.hbr)
  * to any requested crypto asset, memecoin, equity, commodity, ETF, or FX pair

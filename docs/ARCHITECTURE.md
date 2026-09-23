@@ -1,6 +1,6 @@
-# Stratum Technical Architecture & System Design
+# Open-HRT Technical Architecture & System Design
 
-This document details the underlying engineering, memory layout, binary container specification, and algorithmic formulations powering **Stratum**.
+This document details the underlying engineering, memory layout, binary container specification, and algorithmic formulations powering **Open-HRT**.
 
 ---
 
@@ -28,7 +28,7 @@ This document details the underlying engineering, memory layout, binary containe
                         │                                     │
                         ▼                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         STRATUM VISUALIZATION CORE                          │
+│                         OPEN-HRT VISUALIZATION CORE                          │
 │                                                                             │
 │  [Universal Search Prompt]    [Ticker Quick Chips]   [Security Quote Strip] │
 │                                                                             │
@@ -86,10 +86,10 @@ Following the Cont, Kukanov, and Stoikov (2014) framework, OFI quantifies net cr
 
 $$e_t = I(\Delta P_{b,t} \ge 0) \cdot q_{b,t} - I(\Delta P_{b,t} \le 0) \cdot q_{b,t-1} - \left[ I(\Delta P_{a,t} \le 0) \cdot q_{a,t} - I(\Delta P_{a,t} \ge 0) \cdot q_{a,t-1} \right]$$
 
-Stratum exponentially smooths $e_t$ into an indexed gauge bounded in $[-100, +100]$, providing immediate directional flow conviction.
+Open-HRT exponentially smooths $e_t$ into an indexed gauge bounded in $[-100, +100]$, providing immediate directional flow conviction.
 
 ### 3.3 Post-Trade Markout & Adverse Selection
-To assess whether executions were toxic (i.e. picked off by informed latency arbitrageurs), Stratum evaluates post-fill price drift across multiple lookahead horizons ($\tau \in \{100\text{ms}, 1\text{s}, 5\text{s}, 30\text{s}\}$):
+To assess whether executions were toxic (i.e. picked off by informed latency arbitrageurs), Open-HRT evaluates post-fill price drift across multiple lookahead horizons ($\tau \in \{100\text{ms}, 1\text{s}, 5\text{s}, 30\text{s}\}$):
 
 $$\text{Markout}_\tau = \text{Side} \times \left( \frac{P_{\text{mid}}(t + \tau) - P_{\text{fill}}}{P_{\text{fill}}} \right) \times 10{,}000$$
 
@@ -100,7 +100,7 @@ $$\text{Markout}_\tau = \text{Side} \times \left( \frac{P_{\text{mid}}(t + \tau)
 
 ## 4. Probabilistic Queue Estimator
 
-Because public exchange feeds do not reveal individual order identifiers in Level 2 depth, Stratum wraps `ProbQueueModel` using a power-law probability distribution:
+Because public exchange feeds do not reveal individual order identifiers in Level 2 depth, Open-HRT wraps `ProbQueueModel` using a power-law probability distribution:
 
 $$P(\text{fill}) = \left( \frac{Q_{\text{traded}}}{Q_{\text{ahead}} + Q_{\text{order}}} \right)^\alpha$$
 

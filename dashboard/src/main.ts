@@ -1,5 +1,5 @@
 /**
- * Stratum // Institutional High-Frequency Trading & TCA Terminal
+ * Open-HRT // Institutional High-Frequency Trading & TCA Terminal
  * Features:
  * - Multi-asset support across 800+ Crypto pairs (including all memecoins), Equities, Commodities, ETFs, and FX
  * - Numbered Tile Navigation (0 ALL, 1 BOOK, 2 QUEUE, 3 LATENCY, 4 EXECUTIONS, 5 MARKET, 6 TRADES, 7 LOG, 8 ENGINE, 9 COLLECTOR)
@@ -184,14 +184,14 @@ export class TerminalApp {
     }
     this.activeTile = tileNum;
     this.navBar.setActiveTile(tileNum);
-    localStorage.setItem("stratum_tile", String(tileNum));
+    localStorage.setItem("open-hrt_tile", String(tileNum));
     this.applyLayout();
     this.syncUrl();
   }
 
   private handleSymbolChange(symbol: string) {
     this.currentSymbol = symbol.toUpperCase().trim();
-    localStorage.setItem("stratum_symbol", this.currentSymbol);
+    localStorage.setItem("open-hrt_symbol", this.currentSymbol);
     localStorage.setItem("openhft_symbol", this.currentSymbol);
     this.tcaEngine.setSymbol(this.currentSymbol);
 
@@ -207,7 +207,7 @@ export class TerminalApp {
 
   private handleModeToggle(mode: Mode) {
     this.mode = mode;
-    localStorage.setItem("stratum_mode", mode);
+    localStorage.setItem("open-hrt_mode", mode);
     this.navBar.setMode(mode);
 
     if (mode === "live") {
@@ -228,7 +228,7 @@ export class TerminalApp {
     const data = {
       exportTimestamp: new Date().toISOString(),
       symbol: this.currentSymbol,
-      terminal: "Open-HFT Quantitative Terminal",
+      terminal: "Open-HRT Quantitative Terminal",
       regulatoryCompliance: ["SEC 605/606", "MiFID II RTS 27/28", "SEC 10b-18"],
       summary,
       executionBlotter: trades,
@@ -238,7 +238,7 @@ export class TerminalApp {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `open_hft_${this.currentSymbol}_${Date.now()}.json`;
+    a.download = `open_hrt_${this.currentSymbol}_${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -522,8 +522,8 @@ export class TerminalApp {
       `  │  elapsed ${sp("v", elapsed(t))} of ${elapsed(s.endT)}` +
       `  │  position ${sp(pos > 0 ? "g" : pos < 0 ? "r" : "v", (pos >= 0 ? "+" : "") + pos.toFixed(3))}` +
       `  │  ${sp("v", String(s.numTrades[f]))} fills` +
-      sp("right", `OPEN-HFT // HISTORICAL REPLAY ENGINE `);
-      sp("right", `OPEN-HFT // QUANTITATIVE BACKTEST ENGINE `);
+      sp("right", `OPEN-HRT // HISTORICAL REPLAY ENGINE `);
+      sp("right", `OPEN-HRT // QUANTITATIVE BACKTEST ENGINE `);
 
     if (this.clock.playing && Math.floor(t / 1e9) % 5 === 0) this.syncUrl();
   }
@@ -539,7 +539,7 @@ export class TerminalApp {
       `  │  OFI: ${sp(state.ofi >= 0 ? "g" : "r", (state.ofi >= 0 ? "+" : "") + state.ofi.toFixed(0))}` +
       `  │  RESTING ORDERS: ${sp("v", String(this.liveFeed.getSyntheticOrders().length))}` +
       `  │  EXECUTIONS: ${sp("v", String(tradeCount))}` +
-      sp("right", `OPEN-HFT // QUANTITATIVE TERMINAL`);
+      sp("right", `OPEN-HRT // QUANTITATIVE TERMINAL`);
   }
 }
 
@@ -556,7 +556,7 @@ export function loadSessionForAsset(baseHbr: Hbr, symbol: string, initialTile = 
     root.innerHTML = "";
     activeApp = new TerminalApp(root, session, "replay", symbol, initialTile);
     activeApp.startMainLoop();
-    console.log(`[OPEN-HFT] Loaded dynamic backtest for ${symbol} (${session.nFrames} frames, tick ${session.tickSize}, lot ${session.lotSize})`);
+    console.log(`[OPEN-HRT] Loaded dynamic backtest for ${symbol} (${session.nFrames} frames, tick ${session.tickSize}, lot ${session.lotSize})`);
   } catch (err) {
     console.error(`Failed to create backtest for ${symbol}`, err);
   }
@@ -575,7 +575,7 @@ export function loadNewSession(buf: ArrayBuffer, fileName = "recording.hbr") {
     const sym = (session.meta.symbol || "BTCUSDT").toUpperCase();
     activeApp = new TerminalApp(root, session, "replay", sym, 0);
     activeApp.startMainLoop();
-    console.log(`[OPEN-HFT] Loaded session "${fileName}": ${session.nFrames} frames, ${session.fillEvents.length} fills`);
+    console.log(`[OPEN-HRT] Loaded session "${fileName}": ${session.nFrames} frames, ${session.fillEvents.length} fills`);
   } catch (err) {
     alert(`Failed to load .hbr session: ${err instanceof Error ? err.message : String(err)}`);
     console.error(err);
@@ -590,7 +590,7 @@ function setupDragAndDrop() {
       <div class="drop-icon">📂</div>
       <div class="drop-title">LOAD BACKTEST RECORDING</div>
       <div class="drop-desc">Drop any <span class="ext">.hbr</span> binary recording file to replay microstructure</div>
-      <div class="drop-sub">OPEN-HFT // QUANTITATIVE HIGH-FREQUENCY ENGINE</div>
+      <div class="drop-sub">OPEN-HRT // QUANTITATIVE HIGH-FREQUENCY ENGINE</div>
     </div>
   `;
   overlay.style.display = "none";
@@ -640,8 +640,8 @@ async function main() {
   const root = document.getElementById("app")!;
   root.innerHTML = "";
 
-  const savedSymbol = localStorage.getItem("openhft_symbol") || localStorage.getItem("stratum_symbol");
-  const savedTile = localStorage.getItem("openhft_tile") || localStorage.getItem("stratum_tile");
+  const savedSymbol = localStorage.getItem("openhft_symbol") || localStorage.getItem("open-hrt_symbol");
+  const savedTile = localStorage.getItem("openhft_tile") || localStorage.getItem("open-hrt_tile");
 
   const params = new URLSearchParams(window.location.search);
   const initialSymbol = (params.get("symbol") || savedSymbol || "BTCUSDT").toUpperCase();
@@ -649,11 +649,11 @@ async function main() {
   const sessionName = params.get("session") || "sample";
 
   const loading = el("div", "loading", root);
-  loading.textContent = `OPEN-HFT // CONNECTING HIGH-FREQUENCY DMA TELEMETRY...`;
+  loading.textContent = `OPEN-HRT // CONNECTING HIGH-FREQUENCY DMA TELEMETRY...`;
 
   const loadHbr = () =>
     fetchHbr(`/sessions/${sessionName}.hbr`, (loaded, total) => {
-      loading.textContent = `OPEN-HFT // INITIALIZING BINARY ARCHIVE ${(loaded / 1e6).toFixed(1)}${total ? " / " + (total / 1e6).toFixed(1) : ""} MB`;
+      loading.textContent = `OPEN-HRT // INITIALIZING BINARY ARCHIVE ${(loaded / 1e6).toFixed(1)}${total ? " / " + (total / 1e6).toFixed(1) : ""} MB`;
     });
 
   const rawHbr = await loadHbr();
@@ -668,6 +668,6 @@ async function main() {
 
 main().catch((e) => {
   const app = document.getElementById("app")!;
-  app.innerHTML = `<div class="loading">ERROR INITIALIZING OPEN-HFT: ${String(e)}</div>`;
+  app.innerHTML = `<div class="loading">ERROR INITIALIZING OPEN-HRT: ${String(e)}</div>`;
   console.error(e);
 });

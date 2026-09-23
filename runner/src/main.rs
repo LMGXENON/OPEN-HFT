@@ -1,4 +1,4 @@
-//! Stratum Runner: High-performance execution simulation engine for Stratum,
+//! Open-HRT Runner: High-performance execution simulation engine for Open-HRT,
 //! `hftbacktest/examples/algo.rs` / "High-Frequency Grid Trading" tutorial) inside the hftbacktest
 //! engine and records what the engine sees and decides, frame by frame, into a `.hbr` session file.
 //!
@@ -701,7 +701,7 @@ fn main() -> Result<()> {
     rec.f32("e_traded_at_level", &b.e_traded_at_level, 1);
 
     let meta_json = json!({
-        "format": "stratum-session/1",
+        "format": "open-hrt-session/1",
         "generated_at": chrono::Utc::now().to_rfc3339(),
         "symbol": args.symbol,
         "exchange": args.exchange,
@@ -770,7 +770,7 @@ fn main() -> Result<()> {
             "name": "hftbacktest",
             "crate_version": "0.9.4",
             "rustc": rustc_version(),
-            "runner": "stratum-runner 1.0.0",
+            "runner": "open-hrt-runner 1.0.0",
             "os": std::env::consts::OS,
         },
         "event_kinds": { "1": "SUBMIT", "2": "ACK", "3": "FILL", "4": "CANCEL_SENT", "5": "CANCELED", "6": "EXPIRED", "7": "CANCEL_REJECTED" },
@@ -939,5 +939,5 @@ fn fmt_ts(ns: i64) -> String {
 }
 
 fn rustc_version() -> String {
-    option_env!("STRATUM_RUSTC").unwrap_or("unknown").to_string()
+    option_env!("OPEN-HRT_RUSTC").unwrap_or("unknown").to_string()
 }

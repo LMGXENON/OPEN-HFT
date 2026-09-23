@@ -21,7 +21,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PY = ROOT / ".venv" / "Scripts" / "python.exe"
-RUNNER = ROOT / "runner" / "target" / "release" / "stratum-runner.exe"
+RUNNER = ROOT / "runner" / "target" / "release" / "open-hrt-runner.exe"
 
 
 def main() -> None:
@@ -52,9 +52,16 @@ def main() -> None:
                         "--tick-size", str(a.tick_size), "--lot-size", str(a.lot_size),
                         "--mul-entry", str(a.mul_entry), "--mul-resp", str(a.mul_resp)], check=True, cwd=ROOT)
 
-    if not RUNNER.exists():
-        sys.exit(f"runner not built: {RUNNER}  (cd runner && cargo build --release)")
-    cmd = [str(RUNNER), "--data", str(npz), "--latency", str(lat), "--symbol", symbol,
+    runner_candidates = [
+        ROOT / "runner" / "target" / "release" / "open-hrt-runner",
+        ROOT / "runner" / "target" / "release" / "open-hrt-runner.exe",
+        ROOT / "runner" / "target" / "release" / "stratum-runner",
+        ROOT / "runner" / "target" / "release" / "stratum-runner.exe",
+    ]
+    runner_bin = next((c for c in runner_candidates if c.exists()), None)
+    if not runner_bin:
+        sys.exit(f"runner not built! Run: (cd runner && cargo build --release)")
+    cmd = [str(runner_bin), "--data", str(npz), "--latency", str(lat), "--symbol", symbol,
            "--tick-size", str(a.tick_size), "--lot-size", str(a.lot_size), "--out", str(out), *a.runner_args]
     print("== run:", " ".join(cmd))
     subprocess.run(cmd, check=True, cwd=ROOT)

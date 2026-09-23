@@ -1,5 +1,5 @@
 /**
- * Open-HFT Multi-Asset Feed & Synthetic Execution Simulator
+ * Open-HRT Multi-Asset Feed & Synthetic Execution Simulator
  * Connects directly to institutional public feeds for Crypto,
  * and provides realistic microsecond L2 order book simulation for Equities,
  * Commodities, ETFs, and FX.
@@ -143,7 +143,7 @@ export class LiveMarketFeed {
 
   private loadCachedState(symbol: string): boolean {
     try {
-      const raw = localStorage.getItem(`stratum_cache_${symbol}`);
+      const raw = localStorage.getItem(`open-hrt_cache_${symbol}`);
       if (!raw) return false;
       const parsed = JSON.parse(raw);
       if (parsed && Array.isArray(parsed.bids) && parsed.bids.length > 0) {
@@ -183,7 +183,7 @@ export class LiveMarketFeed {
         priceHistory: this.state.priceHistory.slice(-40),
         events: this.state.events.slice(-30),
       };
-      localStorage.setItem(`stratum_cache_${this.symbol}`, JSON.stringify(data));
+      localStorage.setItem(`open-hrt_cache_${this.symbol}`, JSON.stringify(data));
     } catch (e) {}
   }
 

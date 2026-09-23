@@ -1,5 +1,5 @@
 /**
- * StratumTCA Summary Panel
+ * Open-HRTTCA Summary Panel
  * Institutional Best-Execution Scorecard & Cost Attribution
  */
 

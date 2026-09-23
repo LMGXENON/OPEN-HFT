@@ -1,11 +1,11 @@
 name: Feature Request
-description: Propose a new feature, visualization panel, or data connector for Stratum.
+description: Propose a new feature, visualization panel, or data connector for Open-HRT.
 labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
       value: |
-        Have an idea to make Stratum even more powerful for Quants or Trading Desks? Propose it here!
+        Have an idea to make Open-HRT even more powerful for Quants or Trading Desks? Propose it here!
   - type: input
     id: feature_summary
     attributes:
