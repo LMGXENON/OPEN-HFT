@@ -74,47 +74,40 @@ export class TapePanel extends Panel {
     if (!this.changed(key)) return;
 
     const rows = this.rows;
-    const cols = this.cols;
-    const wide = cols >= 54;
-    const venues = ["NYSE", "NSDQ", "ARCA", "BATS", "EDGX"];
+    const out: string[] = [];
 
-    const head = sp(
-      "d",
-      `${lj("TIME", 10)} ${lj("CPTY", 5)} ${lj("SIDE", 4)} ${rj("PRICE", 9)} ${rj("QTY", 7)} ${rj("NOTIONAL", 9)}${wide ? " VENUE" : ""}`
-    );
-    const out: string[] = [head];
+    const displayTrades = trades.slice(0, rows);
+    for (const t of displayTrades) {
+      const cls = t.side === "BUY" ? "bid" : "ask";
+      const sideStr = t.side === "BUY" ? "BUY " : "SELL";
+      
+      const d = new Date(t.time * 1000);
+      const ms = String(Math.floor(d.getMilliseconds())).padStart(3, "0");
+      const timeStr = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}.${ms}`;
 
-    const displayTrades = trades.slice(0, rows - 1);
-    for (let idx = 0; idx < displayTrades.length; idx++) {
-      const tr = displayTrades[idx];
-      const cls = tr.side === "BUY" ? "bid" : "ask";
-      const tag = tr.side === "BUY" ? "BUY " : "SELL";
-      const d = new Date(tr.time);
-      const timeStr = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}.${String(Math.floor(d.getMilliseconds() / 100))}`;
-      const cptyStr = (tr.cpty || "JPM").padEnd(5);
-      const notional = tr.price * tr.qty;
-      const notionalStr = notional >= 1e6 ? `$${(notional / 1e6).toFixed(1)}M` : notional >= 1e3 ? `$${(notional / 1e3).toFixed(1)}k` : `$${notional.toFixed(0)}`;
-      const venue = venues[(tr.time + idx) % venues.length];
+      const pxStr = fmtSmartPrice(t.price);
+      const qtyStr = fmtSmartQty(t.qty);
+      const cptyStr = (t.cpty || "JPM").padStart(5);
+      const notional = t.price * t.qty;
+      const notionalStr = "$" + (notional > 1000 ? (notional / 1000).toFixed(1) + "k" : notional.toFixed(0));
 
-      const rowText =
-        sp("d", timeStr) +
+      const line =
+        sp("d", lj(timeStr, 12)) +
         " " +
-        sp("ours", cptyStr) +
+        sp(cls, rj(pxStr, 10)) +
         " " +
-        sp(cls, tag) +
+        sp("w", rj(qtyStr, 8)) +
         " " +
-        sp("w", rj(fmtSmartPrice(tr.price), 9)) +
+        sp(cls, lj(sideStr, 4)) +
         " " +
-        sp(cls, rj(fmtSmartQty(tr.qty), 7)) +
+        sp("ours", lj(cptyStr.trim(), 5)) +
         " " +
-        sp("w", rj(notionalStr, 9)) +
-        (wide ? " " + sp("d", venue) : "");
+        sp("d", rj(notionalStr, 7));
 
-      out.push(idx === 0 ? `<div class="tape-row-new">${rowText}</div>` : `<div class="tape-row">${rowText}</div>`);
+      out.push(line);
     }
-
     this.content.innerHTML = out.join("\n");
-    this.setTitle(`TIME & SALES (${trades.length} RECENT)`);
+
+    this.setTitle(`${trades.length} trades | LIVE`);
   }
 }
-
