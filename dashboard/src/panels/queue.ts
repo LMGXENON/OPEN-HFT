@@ -89,25 +89,37 @@ export class QueuePanel extends Panel {
 
     // session-so-far statistics from the recorded order events
     if (rows - out.length >= 5) {
+      const isWide = cols >= 65;
+      const tSub = isWide ? " submitted  " : " sub  ";
+      const tAcc = isWide ? " accepted  " : " acc  ";
+      const tFil = isWide ? " filled  " : " fil  ";
+      const tCxl = isWide ? " canceled  " : " cxl  ";
+      const tRej = isWide ? " rejected" : " rej";
+      const tQueue = isWide ? "AT ACCEPT queue ahead p50 " : "ACCEPT q-ahead p50 ";
+      const tJoined = isWide ? "   joined an empty level " : "   joined empty ";
+      const tRested = isWide ? "TO FILL   rested p50 " : "FILL   rested p50 ";
+      const tTraded = isWide ? "    traded at level first p50 " : "    traded first p50 ";
+
       const st = this.stats(s.eventsUpTo(c.t));
       out.push("");
       out.push(sp("d", "─".repeat(Math.max(1, cols - 1))));
       out.push(
         sp("d", "SESSION  ") +
-          sp("w", String(st.submitted)) + sp("d", " submitted  ") +
-          sp("g", String(st.accepted)) + sp("d", " accepted  ") +
-          sp("y", String(st.filled)) + sp("d", " filled  ") +
-          sp("", String(st.canceled)) + sp("d", " canceled  ") +
-          sp("r", String(st.rejected)) + sp("d", " post-only rejected"),
+          sp("w", String(st.submitted)) + sp("d", tSub) +
+          sp("g", String(st.accepted)) + sp("d", tAcc) +
+          sp("y", String(st.filled)) + sp("d", tFil) +
+          sp("w", String(st.canceled)) + sp("d", tCxl) +
+          sp("r", String(st.rejected)) + sp("d", tRej),
       );
       out.push(
-        sp("d", "AT ACCEPT queue ahead p50 ") + sp("c", num(st.aheadP50)) + sp("d", " p90 ") + sp("c", num(st.aheadP90)) +
-          sp("d", "   joined an empty level ") + sp("", `${st.emptyPct}%`),
+        sp("d", tQueue) +
+          sp("c", num(st.aheadP50)) + sp("d", " p90 ") +
+          sp("c", num(st.aheadP90)) + sp("d", tJoined) + sp("g", `${st.emptyPct}%`),
       );
       out.push(
-        sp("d", "TO FILL   rested p50 ") + sp("w", dur(st.restP50)) + sp("d", " p90 ") + sp("w", dur(st.restP90)) +
-          sp("d", "   traded at level first p50 ") + sp("m", num(st.tradedP50)) +
-          sp("d", "   filled after price touched ") + sp("", `${st.touchedPct}%`),
+        sp("d", tRested) + sp("w", dur(st.restP50)) + sp("d", " p90 ") + sp("w", dur(st.restP90)) +
+          sp("d", tTraded) + sp("m", num(st.tradedP50)) +
+          sp("d", isWide ? "   filled after price touched " : "   touched ") + sp("", `${st.touchedPct}%`),
       );
     }
     this.content.innerHTML = out.join("\n");
@@ -174,7 +186,9 @@ export class QueuePanel extends Panel {
     const cols = this.cols;
     const rows = this.rows;
     const wide = cols >= 72;
-    const head = sp("d", lj("SIDE", 4) + " " + rj("PRICE", 9) + " " + rj("QTY", 6) + " " + rj("AHEAD", 7) + (wide ? " " + rj("LEVEL", 7) : "") + " " + rj("POS", 4) + " " + rj("HITS", 4) + " " + rj("REST", 6) + " " + lj("ST", 4) + " QUEUE ahead|ours|behind");
+    const isVeryWide = cols >= 80;
+    const qStr = isVeryWide ? " QUEUE ahead|ours" : " QUEUE";
+    const head = sp("d", lj("SIDE", 4) + " " + rj("PRICE", 9) + " " + rj("QTY", 6) + " " + rj("AHEAD", 7) + (wide ? " " + rj("LEVEL", 7) : "") + " " + rj("POS", 4) + " " + rj("HITS", 4) + " " + rj("REST", 6) + " " + lj("ST", 4) + qStr);
     const fixed = 4 + 1 + 9 + 1 + 6 + 1 + 7 + (wide ? 8 : 0) + 1 + 4 + 1 + 4 + 1 + 6 + 1 + 4 + 1;
     const barW = Math.max(4, cols - fixed - 1) * CW;
     const out: string[] = [head];
