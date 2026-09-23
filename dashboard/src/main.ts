@@ -64,6 +64,8 @@ export class TerminalApp {
   private readonly replayPanels: Panel[];
   private lastRenderKey = "";
   private isDestroyed = false;
+  private hasShownCompletionBanner = false;
+  private completionBannerEl: HTMLElement | null = null;
   private readonly onResizeBound = () => this.applyLayout();
   private readonly onKeyBound = (e: KeyboardEvent) => this.onKey(e);
 
@@ -184,6 +186,11 @@ export class TerminalApp {
 
   destroy(): void {
     this.isDestroyed = true;
+    this.hideCompletionBanner();
+    if (this.completionBannerEl) {
+      this.completionBannerEl.remove();
+      this.completionBannerEl = null;
+    }
     this.clock.pause();
     this.liveFeed.disconnect();
     window.removeEventListener("resize", this.onResizeBound);
@@ -235,11 +242,21 @@ export class TerminalApp {
   }
 
   private exportTCAReport() {
-    const summary = this.tcaEngine.getLiveSummary(this.currentSymbol, this.liveFeed.getState().midPrice);
-    const trades = this.tcaEngine.getTrades();
+    let summary: any;
+    let trades: any[];
+
+    if (this.mode === "replay") {
+      summary = this.tcaEngine.processHistoricalSession(this.s);
+      trades = this.tcaEngine.getTrades();
+    } else {
+      summary = this.tcaEngine.getLiveSummary(this.currentSymbol, this.liveFeed.getState().midPrice);
+      trades = this.tcaEngine.getTrades();
+    }
+
     const data = {
       exportTimestamp: new Date().toISOString(),
       symbol: this.currentSymbol,
+      mode: this.mode,
       terminal: "Open-HRT Quantitative Terminal",
       regulatoryCompliance: ["SEC 605/606", "MiFID II RTS 27/28", "SEC 10b-18"],
       summary,
@@ -250,7 +267,7 @@ export class TerminalApp {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `open_hrt_${this.currentSymbol}_${Date.now()}.json`;
+    a.download = `open_hrt_tca_report_${this.currentSymbol}_${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -497,6 +514,15 @@ export class TerminalApp {
 
     this.navBar.updateReplayState(this.clock.playing, t, s.endT, this.clock.speed);
 
+    // Detect backtest completion (reached 100% of session frames)
+    const isCompleted = t >= s.endT - 1e6;
+    if (isCompleted && !this.hasShownCompletionBanner) {
+      this.triggerBacktestCompletion();
+    } else if (!isCompleted && t < s.endT - 2e9 && this.hasShownCompletionBanner) {
+      this.hasShownCompletionBanner = false;
+      this.hideCompletionBanner();
+    }
+
     const renderKey = `${f}|${this.activeTile}`;
     if (renderKey === this.lastRenderKey) return;
     this.lastRenderKey = renderKey;
@@ -520,22 +546,75 @@ export class TerminalApp {
     this.renderReplayStatus(t, f);
   }
 
+  private triggerBacktestCompletion(): void {
+    this.hasShownCompletionBanner = true;
+    const s = this.s;
+    const summary = this.tcaEngine.processHistoricalSession(s);
+    try {
+      localStorage.setItem("open-hrt_last_tca_report", JSON.stringify({
+        symbol: s.meta.symbol,
+        venue: s.meta.exchange || "Binance USDT-M Futures",
+        timestamp: new Date().toISOString(),
+        durationSec: Number((s.endT / 1e9).toFixed(2)),
+        totalFrames: s.nFrames,
+        fills: s.lives.filter((l) => l.outcome === "filled").length,
+        totalOrders: s.lives.length,
+        summary,
+      }, null, 2));
+    } catch {
+      // ignore storage quota errors
+    }
+
+    if (!this.completionBannerEl) {
+      this.completionBannerEl = el("div", "backtest-completed-banner", document.body);
+    }
+    this.completionBannerEl.style.display = "flex";
+    this.completionBannerEl.innerHTML = `
+      <span class="backtest-banner-badge">✓ BACKTEST COMPLETE</span>
+      <span class="backtest-banner-text">Replay reached 100% (${(s.endT / 1e9).toFixed(1)}s, ${s.lives.filter((l) => l.outcome === "filled").length} fills). Quantitative TCA Report generated.</span>
+      <div class="backtest-banner-actions">
+        <button class="backtest-banner-btn primary" id="btn-banner-tca">📊 VIEW TCA TEAR SHEET</button>
+        <button class="backtest-banner-btn secondary" id="btn-banner-md">📄 EXPORT .MD</button>
+        <button class="backtest-banner-btn secondary" id="btn-banner-json">📁 EXPORT .JSON</button>
+        <button class="backtest-banner-btn close" id="btn-banner-close">✕</button>
+      </div>
+    `;
+
+    document.getElementById("btn-banner-tca")?.addEventListener("click", () => {
+      this.tearSheetModal.open(this.s);
+    });
+    document.getElementById("btn-banner-md")?.addEventListener("click", () => {
+      this.tearSheetModal.exportMarkdownReport(this.s);
+    });
+    document.getElementById("btn-banner-json")?.addEventListener("click", () => {
+      this.exportTCAReport();
+    });
+    document.getElementById("btn-banner-close")?.addEventListener("click", () => {
+      this.hideCompletionBanner();
+    });
+  }
+
+  private hideCompletionBanner(): void {
+    if (this.completionBannerEl) {
+      this.completionBannerEl.style.display = "none";
+    }
+  }
+
   private renderReplayStatus(t: number, f: number): void {
     const s = this.s;
     const pos = s.position[f];
     const timeStr = clock(s.t0, t);
+    const isCompleted = t >= s.endT - 1e6;
 
     this.status.innerHTML =
-      sp(this.clock.playing ? "play" : "pause", this.clock.playing ? " ► REPLAY " : " ‖ PAUSED ") +
-      sp(this.clock.playing ? "play" : "pause", this.clock.playing ? " ► BACKTEST " : " ‖ PAUSED ") +
+      (isCompleted ? sp("play", " ✓ 100% COMPLETE ") : sp(this.clock.playing ? "play" : "pause", this.clock.playing ? " ► BACKTEST " : " ‖ PAUSED ")) +
       sp("v", timeStr) +
       " UTC  " +
       sp("v", `x${this.clock.speed}`) +
       `  │  elapsed ${sp("v", elapsed(t))} of ${elapsed(s.endT)}` +
       `  │  position ${sp(pos > 0 ? "g" : pos < 0 ? "r" : "v", (pos >= 0 ? "+" : "") + pos.toFixed(3))}` +
       `  │  ${sp("v", String(s.numTrades[f]))} fills` +
-      sp("right", `OPEN-HRT // HISTORICAL REPLAY ENGINE `);
-      sp("right", `OPEN-HRT // QUANTITATIVE BACKTEST ENGINE `);
+      sp("right", `OPEN-HRT // QUANTITATIVE BACKTEST TERMINAL `);
 
     if (this.clock.playing && Math.floor(t / 1e9) % 5 === 0) this.syncUrl();
   }

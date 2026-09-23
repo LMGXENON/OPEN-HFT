@@ -1799,12 +1799,106 @@ body {
 .tear-table .neg { color: #ff3344; font-weight: 700; }
 .tear-table .dim { color: #78716c; }
 .tear-table .highlight-row {
-  background: #0a1f36;
-  border-top: 1px solid #00d4ff;
-  border-bottom: 1px solid #00d4ff;
   background: #241c10;
   border-top: 1px solid var(--accent);
   border-bottom: 1px solid var(--accent);
 }
+
+/* Backtest Completed Institutional Banner */
+.backtest-completed-banner {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #090d16;
+  border: 1px solid var(--accent);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), 0 0 15px var(--accent-glow);
+  border-radius: 4px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 999;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  animation: slideUpBanner 0.25s ease-out;
+}
+
+@keyframes slideUpBanner {
+  from {
+    transform: translate(-50%, 20px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+.backtest-banner-badge {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.backtest-banner-text {
+  font-size: 11px;
+  color: #e2e8f0;
+  white-space: nowrap;
+}
+
+.backtest-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.backtest-banner-btn {
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 2px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.backtest-banner-btn.primary {
+  background: var(--accent);
+  color: #000000;
+  border: 1px solid var(--accent);
+}
+.backtest-banner-btn.primary:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.backtest-banner-btn.secondary {
+  background: #141c2c;
+  color: #fbbf24;
+  border: 1px solid var(--frame);
+}
+.backtest-banner-btn.secondary:hover {
+  background: #1f2a40;
+  border-color: var(--accent-dim);
+}
+
+.backtest-banner-btn.close {
+  background: transparent;
+  color: #78716c;
+  border: none;
+  font-size: 13px;
+  padding: 2px 6px;
+}
+.backtest-banner-btn.close:hover {
+  color: #ffffff;
+}
+
 
 
