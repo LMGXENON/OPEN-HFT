@@ -28,16 +28,16 @@ export class LatencyPanel extends Panel {
     const f = c.f;
     const f0 = s.frameAt(Math.max(0, c.t - WINDOW_NS));
     const vals: number[] = [];
-    for (let i = f0; i <= f; i++) if (Number.isFinite(s.feedMean[i])) vals.push(s.feedMean[i] * 1e6);
+    for (let i = f0; i <= f; i++) if (Number.isFinite(s.feedMean[i])) vals.push(s.feedMean[i]);
     const sorted = Float64Array.from(vals).sort();
-    const last = (s.feedLast[f] || 0) * 1e6;
+    const last = Number.isFinite(s.feedLast[f]) && s.feedLast[f] > 0 ? s.feedLast[f] : sorted.length ? sorted[Math.floor(sorted.length / 2)] : 12;
     const p50 = sorted.length ? percentile(sorted, 50) : 10;
     const p95 = sorted.length ? percentile(sorted, 95) : 15;
     const p99 = sorted.length ? percentile(sorted, 99) : 18;
     const msgRate = Math.max(1, Math.round((s.feedBatches[f] || 1) / Math.max(0.001, s.frameNs / 1e9)));
 
     this.renderLive({
-      pingMs: Math.max(1, last),
+      pingMs: Math.max(0.5, last),
       p50,
       p95,
       p99,
@@ -124,13 +124,13 @@ export class LatencyPanel extends Panel {
       tctx.fillStyle = "#080b12";
       tctx.fillRect(0, 0, W, this.trips.height);
 
-      const labelW = Math.max(110, Math.min(150, Math.round(W * 0.30)));
-      const timingTextW = 86;
-      const barAreaW = Math.max(30, W - labelW - timingTextW - 10);
+      const labelW = Math.max(105, Math.min(135, Math.round(W * 0.28)));
+      const timingTextW = 120;
+      const barAreaW = Math.max(30, W - labelW - timingTextW - 12);
       tctx.font = '11px ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace';
       tctx.textBaseline = "middle";
 
-      const ping = stats.pingMs || 15;
+      const ping = stats.pingMs > 0 && stats.pingMs < 1000 ? stats.pingMs : 15;
       const dummyEvents = [
         { name: "ACK", side: "BUY", px: "TCH-1", entry: ping * 0.42, resp: ping * 0.58, col: "#00e676" },
         { name: "FILL", side: "BUY", px: "PASS", entry: ping * 0.38, resp: ping * 0.62, col: "#ffcc00" },
@@ -149,6 +149,7 @@ export class LatencyPanel extends Panel {
         const y = r * CH + CH / 2;
 
         // Label
+        tctx.textAlign = "left";
         tctx.fillStyle = ev.col;
         tctx.fillText(`${ev.name.padEnd(5)} ${ev.side.padEnd(4)} ${ev.px}`, 4, y);
 
@@ -162,10 +163,11 @@ export class LatencyPanel extends Panel {
         tctx.fillStyle = "rgba(224, 64, 251, 0.75)";
         tctx.fillRect(labelW + entryW, r * CH + 3, respW, CH - 6);
 
-        // Timing text (right aligned inside canvas)
+        // Timing text (right aligned strictly within canvas)
+        tctx.textAlign = "right";
         tctx.fillStyle = "#cbd5e1";
         const total = (ev.entry + ev.resp).toFixed(1);
-        tctx.fillText(`${ev.entry.toFixed(0)}+${ev.resp.toFixed(0)}ms (${total}ms)`, W - timingTextW + 2, y);
+        tctx.fillText(`${ev.entry.toFixed(1)}+${ev.resp.toFixed(1)}ms (${total}ms)`, W - 6, y);
       }
     } else {
       fitCanvas(this.trips, W, 0);

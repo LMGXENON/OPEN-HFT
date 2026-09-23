@@ -502,6 +502,13 @@ body {
 }
 .r-btn.play-btn {
   color: var(--accent);
+  width: 76px;
+  min-width: 76px;
+  max-width: 76px;
+  text-align: center;
+  justify-content: center;
+  display: inline-flex;
+  box-sizing: border-box;
 }
 .r-btn.play-btn.playing {
   color: #10b981;
