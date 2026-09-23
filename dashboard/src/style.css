@@ -702,6 +702,8 @@ body {
   height: calc(100% - 25px) !important;
   min-height: 0 !important;
   overflow: hidden !important;
+  padding: 0 !important;
+  /* Center the content block in the full-screen body */
   padding: 4px 8px !important;
 }
 .work.single > .panel > .body > .content,
@@ -716,6 +718,7 @@ body {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
+  justify-content: center !important;
   justify-content: flex-start !important;
   padding: 0 !important;
   overflow: hidden !important;
@@ -724,6 +727,7 @@ body {
 .work.focus > .panel[data-panel="book"] > .body > .content {
   width: fit-content !important;
   max-width: 100% !important;
+  min-width: 0 !important;
 }
 
 /* Canvas-heavy panels: no side padding so canvas fills edge to edge */

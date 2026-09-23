@@ -651,13 +651,13 @@ export class LiveMarketFeed {
   }
 
   private maintainSyntheticOrders() {
+    if (this.syntheticOrders.length >= 4) return;
     if (this.state.bestBid === 0 || this.state.bestAsk === 0) return;
 
     const now = Date.now();
     const mid = this.state.midPrice;
     const tick = this.security.tickSize;
     const orderQty = this.security.lotSize * 5;
-    // Market-maker grid: 5 levels per side at touch, touch+1t, touch+2t, touch+3t, touch+4t
     const GRID_LEVELS = 5;
 
     const existingBuyPrices = new Set(this.syntheticOrders.filter(o => o.side === "BUY").map(o => Math.round(o.price / tick)));
