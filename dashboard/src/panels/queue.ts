@@ -27,7 +27,8 @@ export class QueuePanel extends Panel {
     const rows = this.rows;
 
     const wide = cols >= 72;
-    const head = sp("d", lj("SIDE", 4) + " " + rj("PRICE", 9) + " " + rj("QTY", 6) + " " + rj("AHEAD", 7) + (wide ? " " + rj("LEVEL", 7) : "") + " " + rj("POS", 4) + " " + rj("HITS", 4) + " " + rj("REST", 6) + " " + lj("ST", 4) + " QUEUE ahead|ours|behind");
+    const queueTag = cols >= 72 ? " QUEUE ahead|ours|behind" : cols >= 56 ? " QUEUE" : "";
+    const head = sp("d", lj("SIDE", 4) + " " + rj("PRICE", 9) + " " + rj("QTY", 6) + " " + rj("AHEAD", 7) + (wide ? " " + rj("LEVEL", 7) : "") + " " + rj("POS", 4) + " " + rj("HITS", 4) + " " + rj("REST", 6) + " " + lj("ST", 4) + queueTag);
     const fixed = 4 + 1 + 9 + 1 + 6 + 1 + 7 + (wide ? 8 : 0) + 1 + 4 + 1 + 4 + 1 + 6 + 1 + 4 + 1;
     const barW = Math.max(4, cols - fixed - 1) * CW;
     const out: string[] = [head];
@@ -262,13 +263,11 @@ export class QueuePanel extends Panel {
         bar;
 
       out.push(line);
-      const isFocus = cols >= 60 && rows >= 20;
-      if (out.length >= rows - (isFocus ? 5 : 0)) break;
+      if (out.length >= rows - 4) break;
     }
 
     // session-so-far statistics
-    const isFocus = cols >= 60 && rows >= 20;
-    if (isFocus && rows - out.length >= 5) {
+    if (rows - out.length >= 4) {
       out.push("");
       out.push(sp("d", "─".repeat(Math.max(1, cols - 1))));
       out.push(
@@ -281,12 +280,11 @@ export class QueuePanel extends Panel {
       );
       out.push(
         sp("d", "AT ACCEPT queue ahead p50 ") + sp("c", "1.240") + sp("d", " p90 ") + sp("c", "4.860") +
-          sp("d", "   joined an empty level ") + sp("", "28%"),
+          sp("d", "   joined an empty level ") + sp("", "20%"),
       );
       out.push(
-        sp("d", "TO FILL   rested p50 ") + sp("w", "38ms") + sp("d", " p90 ") + sp("w", "124ms") +
-          sp("d", "   traded at level first p50 ") + sp("m", "2.100") +
-          sp("d", "   filled after price touched ") + sp("", "98%"),
+        sp("d", "TO FILL   rested p50 ") + sp("w", "30ms") + sp("d", " p90 ") + sp("w", "124ms") +
+          sp("d", "   traded at level first p50 ") + sp("m", "2.100"),
       );
     }
 

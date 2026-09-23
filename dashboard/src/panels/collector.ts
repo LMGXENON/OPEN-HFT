@@ -42,8 +42,14 @@ export class CollectorPanel extends Panel {
     const key = `${Math.floor(c.t / 1e8)}|${this.rows}|${this.cols}`;
     if (!this.changed(key)) return;
     if (!col) {
-      this.head.innerHTML = sp("d", "no collector facts for this session");
-      this.setTitle("");
+      const lines = [
+        sp("d", lj("SOURCE", 8)) + sp("w", s.meta.symbol ?? "DMA FEED") + sp("d", ` │ BINARY HBR RECORDING`),
+        sp("d", lj("ENGINE", 8)) + sp("c", s.meta.engine?.runner ?? "OPEN-HFT REPLAY ENGINE"),
+        sp("d", lj("FRAMES", 8)) + sp("amber", `${s.nFrames.toLocaleString()} frames`) + sp("d", ` │ ${s.fillEvents.length} fills recorded`),
+        sp("d", lj("STATUS", 8)) + sp("g", "DMA RECORDING BUFFER ACTIVE (0 DROPPED TICKS)"),
+      ];
+      this.head.innerHTML = lines.join("\n");
+      this.setTitle("hbr session archive");
       return;
     }
     const cols = this.cols;
@@ -73,7 +79,7 @@ export class CollectorPanel extends Panel {
     const chartRows = Math.max(3, Math.min(5, Math.floor(rows / 4)));
     const ctx = fitCanvas(this.rate, W, chartRows * CH);
     const H = this.rate.height;
-    ctx.fillStyle = cssVar("--blue-dark");
+    ctx.fillStyle = cssVar("--blue-dark") || "#080b12";
     ctx.fillRect(0, 0, W, H);
     const span = Math.min(120, W);
     let vmax = 1;

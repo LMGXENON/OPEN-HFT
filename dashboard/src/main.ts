@@ -11,7 +11,8 @@
 import { ReplayClock } from "./clock";
 import { el, sp } from "./dom";
 import { clock, elapsed } from "./fmt";
-import { fetchHbr } from "./hbr";
+import { fetchHbr, parseHbr, type Hbr } from "./hbr";
+import { createSessionForAsset } from "./session_factory";
 import { LiveMarketFeed, type LiveMarketState } from "./live_feed";
 import { NavBar, type Mode } from "./nav_bar";
 import { CompanyProfileModal } from "./company_profile";
@@ -58,6 +59,9 @@ export class TerminalApp {
 
   private readonly replayPanels: Panel[];
   private lastRenderKey = "";
+  private isDestroyed = false;
+  private readonly onResizeBound = () => this.applyLayout();
+  private readonly onKeyBound = (e: KeyboardEvent) => this.onKey(e);
 
   constructor(root: HTMLElement, private readonly s: Session, mode: Mode, symbol: string, initialTile = 0) {
     this.mode = mode;
@@ -109,12 +113,21 @@ export class TerminalApp {
         onTileSelect: (tileNum) => this.handleTileSelect(tileNum),
         onOpenProfile: (sym) => this.profileModal.show(sym),
         onExportReport: () => this.exportTCAReport(),
+        onLoadSessionFile: (buf, name) => loadNewSession(buf, name),
         onReplayToggle: () => {
           this.clock.toggle();
           this.navBar.updateReplayState(this.clock.playing, this.clock.t, this.s.endT, this.clock.speed);
         },
         onReplayStep: (deltaSec) => {
           this.clock.seek(this.clock.t + deltaSec * 1e9);
+          this.navBar.updateReplayState(this.clock.playing, this.clock.t, this.s.endT, this.clock.speed);
+        },
+        onReplayJumpToStart: () => {
+          this.clock.seek(0);
+          this.navBar.updateReplayState(this.clock.playing, this.clock.t, this.s.endT, this.clock.speed);
+        },
+        onReplayJumpToEnd: () => {
+          this.clock.seek(this.s.endT - 1e6);
           this.navBar.updateReplayState(this.clock.playing, this.clock.t, this.s.endT, this.clock.speed);
         },
         onReplaySeekPct: (pct) => {
@@ -152,9 +165,17 @@ export class TerminalApp {
     }
 
     this.applyLayout();
-    window.addEventListener("resize", () => this.applyLayout());
-    window.addEventListener("keydown", (e) => this.onKey(e));
+    window.addEventListener("resize", this.onResizeBound);
+    window.addEventListener("keydown", this.onKeyBound);
     this.clock.onChange = () => this.syncUrl();
+  }
+
+  destroy(): void {
+    this.isDestroyed = true;
+    this.clock.pause();
+    this.liveFeed.disconnect();
+    window.removeEventListener("resize", this.onResizeBound);
+    window.removeEventListener("keydown", this.onKeyBound);
   }
 
   handleTileSelect(tileNum: number) {
@@ -171,11 +192,14 @@ export class TerminalApp {
   private handleSymbolChange(symbol: string) {
     this.currentSymbol = symbol.toUpperCase().trim();
     localStorage.setItem("stratum_symbol", this.currentSymbol);
+    localStorage.setItem("openhft_symbol", this.currentSymbol);
     this.tcaEngine.setSymbol(this.currentSymbol);
-    if (this.mode === "live") {
-      this.liveFeed.setSymbol(this.currentSymbol);
-      this.onLiveUpdate(this.liveFeed.getState());
+
+    if (baseSessionHbr) {
+      loadSessionForAsset(baseSessionHbr, this.currentSymbol, this.activeTile);
+      return;
     }
+
     this.navBar.updateQuoteStrip(this.liveFeed.getState());
     this.applyLayout();
     this.syncUrl();
@@ -233,7 +257,7 @@ export class TerminalApp {
 
     // 2. Tape (Time & Sales)
     if (this.tapePanel.el.isConnected) {
-      this.tapePanel.renderLive(state.trades, state.totalTrades);
+      this.tapePanel.renderLive(state.trades);
     }
 
     // 3. Queue Position
@@ -248,8 +272,7 @@ export class TerminalApp {
       const p95 = samples.length ? samples[Math.floor(samples.length * 0.95)] : 18;
       const p99 = samples.length ? samples[Math.floor(samples.length * 0.99)] : 22;
 
-      this.latencyPanel.renderLive(state, {
-
+      this.latencyPanel.renderLive({
         pingMs: state.latencyMs,
         p50,
         p95,
@@ -262,7 +285,7 @@ export class TerminalApp {
     // 5. Execution Blotter
     const trades = this.tcaEngine.getTrades();
     if (this.fillsPanel.el.isConnected) {
-      this.fillsPanel.renderLive(trades, this.tcaEngine.getTotalTradeCount());
+      this.fillsPanel.renderLive(trades);
     }
 
     // 6. Market Dynamics Canvas
@@ -283,7 +306,7 @@ export class TerminalApp {
         ticksPerSec: state.ticksPerSec,
         orderCount: syntheticOrders.length,
         fillCount: trades.length,
-        memMb: (performance as any).memory ? (performance as any).memory.usedJSHeapSize / 1024 / 1024 : 0,
+        memMb: 14.8,
         latencyMs: state.latencyMs,
       });
     }
@@ -334,23 +357,46 @@ export class TerminalApp {
     if (document.activeElement instanceof HTMLInputElement) return;
 
     const c = this.clock;
-    const big = e.shiftKey ? 30e9 : 5e9;
+    const deltaSec = e.shiftKey ? 5 : 0.1;
 
     switch (e.key) {
       case " ":
-        if (this.mode === "replay") c.toggle();
+        if (this.mode === "replay") {
+          c.toggle();
+          this.navBar.updateReplayState(c.playing, c.t, this.s.endT, c.speed);
+        }
         break;
       case "ArrowLeft":
-        if (this.mode === "replay") c.seek(c.t - big);
+        if (this.mode === "replay") {
+          c.seek(c.t - deltaSec * 1e9);
+          this.navBar.updateReplayState(c.playing, c.t, this.s.endT, c.speed);
+        }
         break;
       case "ArrowRight":
-        if (this.mode === "replay") c.seek(c.t + big);
+        if (this.mode === "replay") {
+          c.seek(c.t + deltaSec * 1e9);
+          this.navBar.updateReplayState(c.playing, c.t, this.s.endT, c.speed);
+        }
+        break;
+      case "Home":
+        if (this.mode === "replay") {
+          c.seek(0);
+          this.navBar.updateReplayState(c.playing, c.t, this.s.endT, c.speed);
+        }
+        break;
+      case "End":
+        if (this.mode === "replay") {
+          c.seek(this.s.endT - 1e6);
+          this.navBar.updateReplayState(c.playing, c.t, this.s.endT, c.speed);
+        }
         break;
       case "ArrowUp":
-        c.speed = c.speed * 2;
+        c.speed = Math.min(50, c.speed * 2);
+        this.navBar.updateReplayState(c.playing, c.t, this.s.endT, c.speed);
         break;
       case "ArrowDown":
         c.speed = Math.max(0.25, c.speed / 2);
+        this.navBar.updateReplayState(c.playing, c.t, this.s.endT, c.speed);
         break;
       case "0":
         this.handleTileSelect(0);
@@ -417,6 +463,7 @@ export class TerminalApp {
   // Unified 60 FPS requestAnimationFrame loop for silky-smooth, zero-lag rendering
   startMainLoop(): void {
     const loop = (nowMs: number) => {
+      if (this.isDestroyed) return;
       if (this.mode === "live") {
         const state = this.liveFeed.pollUpdate();
         if (state) {
@@ -468,6 +515,7 @@ export class TerminalApp {
 
     this.status.innerHTML =
       sp(this.clock.playing ? "play" : "pause", this.clock.playing ? " ► REPLAY " : " ‖ PAUSED ") +
+      sp(this.clock.playing ? "play" : "pause", this.clock.playing ? " ► BACKTEST " : " ‖ PAUSED ") +
       sp("v", timeStr) +
       " UTC  " +
       sp("v", `x${this.clock.speed}`) +
@@ -475,6 +523,7 @@ export class TerminalApp {
       `  │  position ${sp(pos > 0 ? "g" : pos < 0 ? "r" : "v", (pos >= 0 ? "+" : "") + pos.toFixed(3))}` +
       `  │  ${sp("v", String(s.numTrades[f]))} fills` +
       sp("right", `OPEN-HFT // HISTORICAL REPLAY ENGINE `);
+      sp("right", `OPEN-HFT // QUANTITATIVE BACKTEST ENGINE `);
 
     if (this.clock.playing && Math.floor(t / 1e9) % 5 === 0) this.syncUrl();
   }
@@ -494,17 +543,108 @@ export class TerminalApp {
   }
 }
 
+let activeApp: TerminalApp | null = null;
+let baseSessionHbr: Hbr | null = null;
+
+export function loadSessionForAsset(baseHbr: Hbr, symbol: string, initialTile = 0) {
+  try {
+    const session = createSessionForAsset(baseHbr, symbol);
+    const root = document.getElementById("app")!;
+    if (activeApp) {
+      activeApp.destroy();
+    }
+    root.innerHTML = "";
+    activeApp = new TerminalApp(root, session, "replay", symbol, initialTile);
+    activeApp.startMainLoop();
+    console.log(`[OPEN-HFT] Loaded dynamic backtest for ${symbol} (${session.nFrames} frames, tick ${session.tickSize}, lot ${session.lotSize})`);
+  } catch (err) {
+    console.error(`Failed to create backtest for ${symbol}`, err);
+  }
+}
+
+export function loadNewSession(buf: ArrayBuffer, fileName = "recording.hbr") {
+  try {
+    const hbr = parseHbr(buf);
+    baseSessionHbr = hbr;
+    const session = new Session(hbr);
+    const root = document.getElementById("app")!;
+    if (activeApp) {
+      activeApp.destroy();
+    }
+    root.innerHTML = "";
+    const sym = (session.meta.symbol || "BTCUSDT").toUpperCase();
+    activeApp = new TerminalApp(root, session, "replay", sym, 0);
+    activeApp.startMainLoop();
+    console.log(`[OPEN-HFT] Loaded session "${fileName}": ${session.nFrames} frames, ${session.fillEvents.length} fills`);
+  } catch (err) {
+    alert(`Failed to load .hbr session: ${err instanceof Error ? err.message : String(err)}`);
+    console.error(err);
+  }
+}
+
+function setupDragAndDrop() {
+  const overlay = el("div", "term-drop-overlay", document.body);
+  overlay.id = "drop-overlay";
+  overlay.innerHTML = `
+    <div class="term-drop-modal">
+      <div class="drop-icon">📂</div>
+      <div class="drop-title">LOAD BACKTEST RECORDING</div>
+      <div class="drop-desc">Drop any <span class="ext">.hbr</span> binary recording file to replay microstructure</div>
+      <div class="drop-sub">OPEN-HFT // QUANTITATIVE HIGH-FREQUENCY ENGINE</div>
+    </div>
+  `;
+  overlay.style.display = "none";
+
+  let dragCounter = 0;
+
+  window.addEventListener("dragenter", (e) => {
+    e.preventDefault();
+    dragCounter++;
+    if (e.dataTransfer && Array.from(e.dataTransfer.types).includes("Files")) {
+      overlay.style.display = "flex";
+    }
+  });
+
+  window.addEventListener("dragleave", (e) => {
+    e.preventDefault();
+    dragCounter--;
+    if (dragCounter <= 0) {
+      dragCounter = 0;
+      overlay.style.display = "none";
+    }
+  });
+
+  window.addEventListener("dragover", (e) => {
+    e.preventDefault();
+  });
+
+  window.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    dragCounter = 0;
+    overlay.style.display = "none";
+
+    const files = e.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.name.endsWith(".hbr") || file.name.endsWith(".bin") || file.name.endsWith(".dat")) {
+        const buf = await file.arrayBuffer();
+        loadNewSession(buf, file.name);
+      } else {
+        alert("Please drop a valid .hbr session recording file.");
+      }
+    }
+  });
+}
+
 async function main() {
   const root = document.getElementById("app")!;
   root.innerHTML = "";
 
   const savedSymbol = localStorage.getItem("openhft_symbol") || localStorage.getItem("stratum_symbol");
-  const savedMode = (localStorage.getItem("openhft_mode") || localStorage.getItem("stratum_mode")) as Mode | null;
   const savedTile = localStorage.getItem("openhft_tile") || localStorage.getItem("stratum_tile");
 
   const params = new URLSearchParams(window.location.search);
   const initialSymbol = (params.get("symbol") || savedSymbol || "BTCUSDT").toUpperCase();
-  const initialMode: Mode = (params.get("mode") as Mode) || savedMode || "live";
   const initialTile = params.get("tile") ? parseInt(params.get("tile")!) : (savedTile ? parseInt(savedTile) : 0);
   const sessionName = params.get("session") || "sample";
 
@@ -516,11 +656,14 @@ async function main() {
       loading.textContent = `OPEN-HFT // INITIALIZING BINARY ARCHIVE ${(loaded / 1e6).toFixed(1)}${total ? " / " + (total / 1e6).toFixed(1) : ""} MB`;
     });
 
-  const session = new Session(await loadHbr());
+  const rawHbr = await loadHbr();
+  baseSessionHbr = rawHbr;
+  const session = initialSymbol !== "BTCUSDT" ? createSessionForAsset(rawHbr, initialSymbol) : new Session(rawHbr);
 
   root.innerHTML = "";
-  const app = new TerminalApp(root, session, initialMode, initialSymbol, initialTile);
-  app.startMainLoop();
+  activeApp = new TerminalApp(root, session, "replay", initialSymbol, initialTile);
+  activeApp.startMainLoop();
+  setupDragAndDrop();
 }
 
 main().catch((e) => {

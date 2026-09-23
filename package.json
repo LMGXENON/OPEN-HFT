@@ -1,0 +1,11 @@
+{
+  "name": "open-hft-root",
+  "version": "1.0.0",
+  "scripts": {
+    "install:all": "cd dashboard && npm install && cd ../data-hub && npm install",
+    "dev": "npx concurrently \"cd data-hub && npm start\" \"cd dashboard && npm run dev\""
+  },
+  "dependencies": {
+    "concurrently": "^8.0.0"
+  }
+}

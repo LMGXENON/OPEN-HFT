@@ -21,8 +21,11 @@ export interface NavBarCallbacks {
   onTileSelect: (tileNum: number) => void;
   onOpenProfile: (symbol: string) => void;
   onExportReport: () => void;
+  onLoadSessionFile?: (buf: ArrayBuffer, fileName: string) => void;
   onReplayToggle?: () => void;
   onReplayStep?: (deltaSec: number) => void;
+  onReplayJumpToStart?: () => void;
+  onReplayJumpToEnd?: () => void;
   onReplaySeekPct?: (pct: number) => void;
   onReplaySpeed?: (speed: number) => void;
 }
@@ -34,9 +37,6 @@ export class NavBar {
   private currentSymbol: string = "BTCUSDT";
   private callbacks: NavBarCallbacks;
 
-  private modeBtn!: HTMLElement;
-  private modeStatusDot!: HTMLElement;
-  private modeLabel!: HTMLElement;
   private commandInput!: HTMLInputElement;
   private searchDropdown!: HTMLElement;
   private quoteStrip!: HTMLElement;
@@ -48,9 +48,9 @@ export class NavBar {
   private replaySpeedButtons: Map<number, HTMLElement> = new Map();
   private tileButtons: Map<number, HTMLElement> = new Map();
 
-  constructor(parent: HTMLElement, callbacks: NavBarCallbacks, initialMode: Mode = "live", initialSymbol = "BTCUSDT") {
+  constructor(parent: HTMLElement, callbacks: NavBarCallbacks, _initialMode: Mode = "replay", initialSymbol = "BTCUSDT") {
     this.callbacks = callbacks;
-    this.currentMode = initialMode;
+    this.currentMode = "replay";
     this.currentSymbol = initialSymbol;
 
     this.root = el("header", "term-nav-root", parent);
@@ -62,6 +62,7 @@ export class NavBar {
 
     // =========================================================================
     // ROW 1: BRAND, UNIVERSAL SEARCH, QUICK PILLS, PROFILE & MODE TOGGLE
+    // ROW 1: BRAND, UNIVERSAL SEARCH, QUICK PILLS, PROFILE & MODE BADGE
     // =========================================================================
     const topRow = el("div", "term-nav-row top-row", this.root);
 
@@ -69,19 +70,13 @@ export class NavBar {
     const brand = el("div", "term-brand", topRow);
     brand.innerHTML = `
       <span class="brand-title">OPEN-HFT</span>
-      <span class="brand-tag">ENGINE</span>
+      <span class="brand-tag">BACKTEST</span>
     `;
 
-    // Mode Toggle (REALTIME vs REPLAY)
-    this.modeBtn = el("button", "term-mode-toggle", topRow);
-    this.modeStatusDot = el("span", "mode-dot active", this.modeBtn);
-    this.modeLabel = el("span", "mode-label", this.modeBtn);
-    this.updateModeDisplay();
-    this.modeBtn.onclick = () => {
-      const nextMode: Mode = this.currentMode === "live" ? "replay" : "live";
-      this.setMode(nextMode);
-      this.callbacks.onModeToggle(nextMode);
-    };
+    // Dedicated Backtest Badge (no toggle button)
+    const modeBadge = el("div", "term-mode-badge", topRow);
+    modeBadge.innerHTML = `<span class="mode-dot replay"></span><span class="mode-label">BACKTEST</span>`;
+    modeBadge.title = "OPEN-HFT Quantitative Microstructure Replay & Backtest Engine";
 
     // Center Universal Search Command Box
     const searchContainer = el("div", "term-search-container", topRow);
@@ -150,6 +145,29 @@ export class NavBar {
     // Right Action Buttons
     const rightActions = el("div", "term-right-actions", topRow);
 
+    const fileInput = el("input", "term-file-input", rightActions) as HTMLInputElement;
+    fileInput.type = "file";
+    fileInput.accept = ".hbr";
+    fileInput.style.display = "none";
+    fileInput.onchange = () => {
+      const file = fileInput.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (reader.result instanceof ArrayBuffer) {
+            this.callbacks.onLoadSessionFile?.(reader.result, file.name);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      }
+      fileInput.value = "";
+    };
+
+    const loadBtn = el("button", "term-action-btn load-btn", rightActions);
+    loadBtn.innerHTML = `<span class="k-hint">⊕</span> LOAD .HBR`;
+    loadBtn.title = "Load custom .hbr backtest recording from disk";
+    loadBtn.onclick = () => fileInput.click();
+
     const profileBtn = el("button", "term-action-btn", rightActions);
     profileBtn.innerHTML = `<span class="k-hint">DES</span> PROFILE`;
     profileBtn.title = "Open Security Description Profile (F8 / D)";
@@ -199,37 +217,60 @@ export class NavBar {
 
     const rControls = el("div", "r-controls-left", this.replayBar);
 
+    const jumpStartBtn = el("button", "r-btn jump-btn", rControls);
+    jumpStartBtn.innerHTML = `⏮`;
+    jumpStartBtn.title = "Jump to beginning of recording (Home)";
+    jumpStartBtn.onclick = () => this.callbacks.onReplayJumpToStart?.();
+
+    const stepBack5Btn = el("button", "r-btn step-btn", rControls);
+    stepBack5Btn.innerHTML = `◄ -5s`;
+    stepBack5Btn.title = "Step back 5 seconds (Shift+Left)";
+    stepBack5Btn.onclick = () => this.callbacks.onReplayStep?.(-5);
+
+    const stepBack100Btn = el("button", "r-btn step-btn micro-step", rControls);
+    stepBack100Btn.innerHTML = `-100ms`;
+    stepBack100Btn.title = "Step back 100ms (Left arrow)";
+    stepBack100Btn.onclick = () => this.callbacks.onReplayStep?.(-0.1);
+
     this.replayPlayBtn = el("button", "r-btn play-btn", rControls);
     this.replayPlayBtn.innerHTML = `► PLAY`;
+    this.replayPlayBtn.title = "Play / Pause (Space)";
     this.replayPlayBtn.onclick = () => this.callbacks.onReplayToggle?.();
 
-    const stepBackBtn = el("button", "r-btn step-btn", rControls);
-    stepBackBtn.innerHTML = `◄◄ -5s`;
-    stepBackBtn.onclick = () => this.callbacks.onReplayStep?.(-5);
+    const stepFwd100Btn = el("button", "r-btn step-btn micro-step", rControls);
+    stepFwd100Btn.innerHTML = `+100ms`;
+    stepFwd100Btn.title = "Step forward 100ms (Right arrow)";
+    stepFwd100Btn.onclick = () => this.callbacks.onReplayStep?.(0.1);
 
-    const stepFwdBtn = el("button", "r-btn step-btn", rControls);
-    stepFwdBtn.innerHTML = `+5s ►►`;
-    stepFwdBtn.onclick = () => this.callbacks.onReplayStep?.(5);
+    const stepFwd5Btn = el("button", "r-btn step-btn", rControls);
+    stepFwd5Btn.innerHTML = `+5s ►`;
+    stepFwd5Btn.title = "Step forward 5 seconds (Shift+Right)";
+    stepFwd5Btn.onclick = () => this.callbacks.onReplayStep?.(5);
+
+    const jumpEndBtn = el("button", "r-btn jump-btn", rControls);
+    jumpEndBtn.innerHTML = `⏭`;
+    jumpEndBtn.title = "Jump to end of recording (End)";
+    jumpEndBtn.onclick = () => this.callbacks.onReplayJumpToEnd?.();
 
     const sliderContainer = el("div", "r-slider-container", this.replayBar);
     this.replaySlider = el("input", "r-scrubber", sliderContainer) as HTMLInputElement;
     this.replaySlider.type = "range";
     this.replaySlider.min = "0";
-    this.replaySlider.max = "1000";
+    this.replaySlider.max = "10000";
     this.replaySlider.value = "0";
     this.replaySlider.oninput = () => {
-      const pct = parseFloat(this.replaySlider.value) / 1000;
+      const pct = parseFloat(this.replaySlider.value) / 10000;
       this.callbacks.onReplaySeekPct?.(pct);
     };
 
     this.replayTimeLabel = el("span", "r-time-label", sliderContainer);
     this.replayTimeLabel.textContent = "0:00.0 / 0:00.0";
 
-    const speeds = [0.5, 1, 2, 5, 10, 20];
+    const speeds = [0.25, 0.5, 1, 2, 5, 10, 25, 50];
     const speedContainer = el("div", "r-speed-container", this.replayBar);
     for (const spd of speeds) {
       const sBtn = el("button", "r-speed-btn", speedContainer);
-      sBtn.textContent = `${spd}x`;
+      sBtn.textContent = spd === 50 ? "MAX" : `${spd}x`;
       if (spd === 1) sBtn.classList.add("active");
       sBtn.onclick = () => {
         this.callbacks.onReplaySpeed?.(spd);
@@ -256,9 +297,12 @@ export class NavBar {
     }
 
     if (totalNs > 0) {
-      const pct = Math.min(1000, Math.max(0, Math.floor((currentNs / totalNs) * 1000)));
+      const pct = Math.min(10000, Math.max(0, Math.floor((currentNs / totalNs) * 10000)));
       this.replaySlider.value = String(pct);
-      this.replayTimeLabel.textContent = `${elapsed(currentNs)} / ${elapsed(totalNs)}`;
+      const curStr = elapsed(currentNs);
+      const totStr = elapsed(totalNs);
+      const pctStr = ((currentNs / totalNs) * 100).toFixed(1);
+      this.replayTimeLabel.textContent = `${curStr} / ${totStr} (${pctStr}%)`;
     }
 
     this.replaySpeedButtons.forEach((btn, spd) => {
@@ -332,23 +376,10 @@ export class NavBar {
     this.callbacks.onSymbolChange(this.currentSymbol);
   }
 
-  setMode(mode: Mode) {
-    this.currentMode = mode;
-    this.updateModeDisplay();
+  setMode(_mode: Mode) {
+    this.currentMode = "replay";
     if (this.replayBar) {
-      this.replayBar.style.display = mode === "replay" ? "flex" : "none";
-    }
-  }
-
-  private updateModeDisplay() {
-    if (this.currentMode === "live") {
-      this.modeStatusDot.className = "mode-dot active";
-      this.modeLabel.textContent = "REALTIME";
-      this.modeBtn.title = "Current: REALTIME market stream. Click to switch to REPLAY backtest.";
-    } else {
-      this.modeStatusDot.className = "mode-dot replay";
-      this.modeLabel.textContent = "REPLAY";
-      this.modeBtn.title = "Current: REPLAY backtest. Click to switch to REALTIME stream.";
+      this.replayBar.style.display = "flex";
     }
   }
 

@@ -132,11 +132,9 @@ export class BookPanel extends Panel {
       let oursTxt = " ".repeat(OURS_W);
       let oursCls = "ours";
       if (o) {
-        const pending = o.status === ST.NONE;
-        const cxl = o.req === 4;
-        const glyph = pending ? "»" : cxl ? "«" : " ";
+        const glyph = "»";
         oursTxt = (glyph + o.leaves.toFixed(this.qd)).padStart(OURS_W);
-        oursCls = pending || cxl ? "d" : "ours";
+        oursCls = "y";
       }
       const pxCls = o ? "ours" : isBest ? "w" : side === 1 ? "bid" : "ask";
       const pxHtml = fills.has(tick)
@@ -157,10 +155,13 @@ export class BookPanel extends Panel {
 
     for (let i = askTicks.length - 1; i >= 0; i--) row(askTicks[i], -1, askTicks[i] === ba);
     for (let i = askTicks.length; i < nAsk; i++) out.unshift(`<div class="row"></div>`);
-    const spreadTxt = Number.isFinite(spreadTicks)
-      ? `${" ".repeat(OURS_W + 1)}${("spread " + spreadTicks + (spreadTicks === 1 ? " tick" : " ticks")).padStart(QTY_W + 1 + 3)}${("mid " + mid.toFixed(this.pxd + 1)).padStart(PX_W + 6)}`
+    const spdPrice = Number.isFinite(spreadTicks) ? spreadTicks * s.tickSize : 0;
+    const spdBps = mid > 0 ? (spdPrice / mid) * 10000 : 0;
+    const spreadInfo = Number.isFinite(spreadTicks)
+      ? `spread ${spdPrice.toFixed(this.pxd)} (${spdBps.toFixed(1)} bps)  mid ${mid.toFixed(this.pxd)}`
       : "  no book";
-    out.push(`<div class="row spread">${esc(spreadTxt)}</div>`);
+    const padSpread = Math.max(0, Math.floor((46 - spreadInfo.length) / 2));
+    out.push(`<div class="row spread">${esc(" ".repeat(padSpread) + spreadInfo)}</div>`);
     for (let i = 0; i < bidTicks.length; i++) row(bidTicks[i], 1, bidTicks[i] === bb);
     this.content.innerHTML = out.join("");
 

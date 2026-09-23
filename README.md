@@ -1,177 +1,265 @@
-# Open-HFT
+# OPEN-HFT // Quantitative Backtest Terminal
 
-### Institutional Market Microstructure & High-Frequency Trading Terminal
+> **Nanosecond-Accurate Market Microstructure Backtesting, Replay & Execution Forensics**
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)](https://github.com/LMGXENON/OPEN-HRT)
-[![TypeScript 5.6](https://img.shields.io/badge/typescript-5.6-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org)
-[![Vite 6](https://img.shields.io/badge/vite-6.4-purple?style=flat-square&logo=vite)](https://vitejs.dev)
-[![Rust 1.80+](https://img.shields.io/badge/rust-1.80%2B-orange?style=flat-square&logo=rust)](https://www.rust-lang.org)
-[![License: MIT](https://img.shields.io/badge/license-MIT-yellow?style=flat-square)](LICENSE)
-[![Zero Config](https://img.shields.io/badge/data-zero--api--keys-emerald?style=flat-square)](https://github.com/LMGXENON/OPEN-HRT)
-[![Compliance](https://img.shields.io/badge/compliance-SEC%20605%2F606%20%7C%20MiFID%20II-purple?style=flat-square)](docs/ARCHITECTURE.md)
+OPEN-HFT is an institutional market microstructure backtesting engine and execution forensics terminal built on top of [hftbacktest](https://github.com/nkaz001/hftbacktest). Designed for quantitative researchers, high-frequency market makers, and algorithmic execution desks, it records, replays, and stress-tests trading strategies with full visibility into the exchange order book, order queue dynamics, wire latency, and fill quality.
 
-An open-source institutional market microstructure and execution forensics terminal built on top of [hftbacktest](https://github.com/nkaz001/hftbacktest) and direct market data feeds. It provides real-time Level 2 depth streaming across 800+ digital assets (including memecoins), US equities, commodities, ETFs, and FX, alongside nanosecond-accurate historical backtest replays.
+---
 
-The terminal visualizes what high-frequency market-making algorithms see and decide frame by frame: the local order book ladder, resting orders with exchange-side queue estimates (`ahead | ours | behind`), feed and wire latencies, executions, order lifecycle logs, raw collector ingress, and kernel throughput statistics.
+## Key Features
 
-![Open-HFT Terminal](docs/shots/open_hft_terminal.png)
+- **Nanosecond Level 2 Replay**: Reconstructs the full 24-level order book ladder tick by tick from raw exchange packet captures.
+- **Microstructure Queue Modeling**: Simulates exchange-side queue priority (`ahead | ours | behind`) using calibrated power-law probability models (`PowerProbQueueModel3`, n=3).
+- **Latency & Wire Forensics**: Tracks hardware receipt jitter ($p_{50}, p_{95}, p_{99}$), DMA round trips, and dual-phase wire transit times (entry request in cyan, wire confirmation in magenta).
+- **Synchronized Blotters**: Tabular Execution Blotter (Tile 4) and Time & Sales Tape (Tile 6) with counterparty tagging, resting wait times, notional sizing, and venue routes.
+- **Dynamic Multi-Asset Engine**: Test strategies across 800+ assets (crypto, US equities, commodities, FX) with automatic scaling of price physics, tick sizes, and lot sizes.
+- **Zero-Setup Web Terminal**: High-performance canvas-accelerated text-mode UI running locally in any browser with instant keyboard navigation (0–9).
+- **Regulatory TCA Export**: One-click generation (`F7`) of Transaction Cost Analysis reports covering Implementation Shortfall (IS), adverse selection markouts (+100ms to +30s), and SEC 605/606 & MiFID II compliance benchmarks.
 
-## Before you trade this
+---
 
-This repository contains an execution simulation engine, backtester, and real-time microstructure terminal. It does not place live capital orders. Key microstructure realities to keep in mind:
+## Quick Start (Dashboard)
 
-1. **Fees and Rebates.** High-frequency quoting at the touch requires maker fee rebates. A standard retail account pays a taker or maker fee rather than receiving a rebate. If a spread is 1 tick (e.g. 0.013 bps on BTC), retail fees exceed the entire spread. Quoting passively at the touch is viable primarily within institutional fee-tier and market-maker rebate programs.
-2. **Latency and Colocation.** Live feeds running over residential or commercial WAN connections typically observe 20 ms to 150 ms of network transit time. In production prop environments, quoting engines are colocated inside the exchange data center (e.g. Equinix LD4, NY4, or AWS Tokyo) with sub-millisecond round trips. Over WAN connections, resting limit orders face higher adverse selection and post-only rejection rates as quotes are canceled after the market has already moved.
-3. **Queue Modeling and Market Impact.** In backtest and simulation mode, queue positions are modeled using calibrated probabilistic queue models (e.g. power-law queue estimates based on Level 2 depth). In live production, exchange queues follow strict FIFO matching where queue priority depends on microsecond timestamp precedence. Real-world child orders also generate market impact and adverse selection that historical replays estimate passively.
-4. **Markouts over P&L.** The terminal focuses on adverse selection markouts (+100ms, +1s, +5s, +30s) and execution quality rather than unhedged theoretical P&L. Markouts isolate whether resting limit orders were filled by uninformed retail flow (capturing spread) or by informed aggressive traders (suffering toxic pick-off).
+Run the visual backtest terminal in under a minute:
 
-```
-open-hft/
-  hftbacktest/      core market simulation engine (Rust crate, Python package, data collector)
-  patches/          queue-position getters exposed on exchange-side order structures
-  runner/           Rust binary: strategy runner and HFTREC01 nanosecond binary frame recorder
-  dashboard/        Vite + TypeScript terminal UI (text-mode look, IBM VGA bitmap fonts)
-  tools/            collector, data preparation, session conversion, and forensic inspection
-  data/             raw feeds, npz caches, latency models, and binary session recordings
-```
-
-## What is real and what is modelled
-
-| On screen | Mode: Real-Time Live | Mode: Historical Replay |
-| --- | --- | --- |
-| **Order Book (Tile 1)** | Live Level 2 order book constructed from direct exchange WebSocket streams | Reconstructed from nanosecond `.hbr` recording frames |
-| **Queue Position (Tile 2)** | Synthetic resting orders placed at the touch with real-time FIFO queue priority | Probabilistic queue model (`PowerProbQueueFunc3`, n=3) evaluated by the Rust engine |
-| **Feed & Wire Latency (Tile 3)** | Direct exchange round-trip and local socket receipt telemetry | Recorded exchange timestamp to local receipt offset (`feedMean`, `feedMax`) |
-| **Executions (Tile 4)** | Executions matched as market trades cross our resting limit price | Recorded simulated strategy fills with touch-to-fill and queue wait times |
-| **Market Chart (Tile 5)** | Rolling price trajectory, VWAP, 24h high/low, and live spread | Mid price, resting bid/ask bounds, fills, and strategy position strip |
-| **Time & Sales (Tile 6)** | Live executed trade tape with counterparty tags and notional size | Replayed market trades with local receipt delay (`rx`) |
-| **Order Log (Tile 7)** | Real-time order lifecycle events (`NEW`, `ACK`, `FILL`, `CXL`) | Event stream as observed by the local trading strategy |
-| **Engine Stats (Tile 8)** | Live kernel throughput, tick rate, and memory footprint | Rust runner process statistics, wall-clock time, and event rate |
-| **Collector (Tile 9)** | Ingress network packet rates, socket throughput, and dropped packet audit | Raw recorded stream message rates and sampled payload messages |
-
-## Terminal layout and navigation (0 to 9)
-
-Every tile in the terminal is assigned an individual number. Clicking the tile number on the navbar or pressing `1` through `9` on your keyboard isolates and expands that panel into an edge-to-edge view with zero distortion:
-
-| Key / # | Panel | Description |
-|:---:|---|---|
-| **`0`** | **ALL TILES** | Displays the full 9-panel terminal grid showing all microstructure telemetry simultaneously. |
-| **`1`** | **BOOK** | High-resolution Level 2 order book ladder with centered price column, split queue bars, and live spread. |
-| **`2`** | **QUEUE** | Real-time queue breakdown showing our order position (`1st`, `2nd`, `3rd`, `%`), hits, wait time, and split bar (`ahead \| ours \| behind`). |
-| **`3`** | **LATENCY** | Feed latency sparkline ($p_{50}, p_{95}, p_{99}$), order round-trip canvas (entry in cyan, response in magenta), and hardware telemetry audit. |
-| **`4`** | **EXECUTIONS** | Execution blotter recording child order fills, queue rest duration, counterparty tags, and notional values. |
-| **`5`** | **MARKET** | Clean canvas mid price curve with dashed reference gridlines, volume histogram, and 24h market metrics. |
-| **`6`** | **TRADES** | Institutional Time & Sales tape with trade timestamps, counterparty tags, price, size, and execution venue. |
-| **`7`** | **LOG** | Complete order lifecycle audit log tracking order submissions, exchange acknowledgments, queue updates, and fills. |
-| **`8`** | **ENGINE** | Execution kernel metrics: throughput ticks per second, fill ratios, and memory footprint. |
-| **`9`** | **COLLECTOR** | Ingress telemetry: packet ingress rates, total payload bytes received, and sequence continuity. |
-
-## Quantitative Forensics Mathematics
-
-### Implementation Shortfall (IS)
-$$\text{IS}_{\text{bps}} = \text{Side} \times \left( \frac{P_{\text{fill}} - P_{\text{arrival}}}{P_{\text{arrival}}} \right) \times 10{,}000$$
-* $\text{Side} = +1$ for BUY, $-1$ for SELL.
-* Measures the true execution slippage relative to the prevailing mid-market price when the trading decision was originated.
-
-### Adverse Selection Markouts (+100ms, +1s, +5s, +30s)
-$$\text{Markout}_\tau = \text{Side} \times \left( \frac{P_{\text{mid}}(t + \tau) - P_{\text{fill}}}{P_{\text{fill}}} \right) \times 10{,}000$$
-* **Positive Markout**: Clean execution. The order captured spread, and the market drifted favorably after fill.
-* **Negative Markout**: Toxic fill. The order suffered the winner's curse where aggressive flow picked off passive quotes before an adverse market move.
-
-### Order Flow Imbalance (OFI)
-Following the Cont, Kukanov, and Stoikov microstructure framework:
-$$e_t = I(\Delta P_{b,t} \ge 0) \cdot q_{b,t} - I(\Delta P_{b,t} \le 0) \cdot q_{b,t-1} - \left[ I(\Delta P_{a,t} \le 0) \cdot q_{a,t} - I(\Delta P_{a,t} \ge 0) \cdot q_{a,t-1} \right]$$
-* Normalizes microsecond book dynamics into an institutional flow conviction indicator from `-100` (heavy sell pressure) to `+100` (heavy buy pressure).
-
-## Quickstart
-
-### Prerequisites
-* **Node.js** (v18 or newer)
-* Modern web browser (Chrome, Safari, Edge, or Firefox)
-
-### 1. Clone the repository
 ```bash
-git clone --recursive https://github.com/LMGXENON/OPEN-HRT.git
-cd OPEN-HRT
-```
-
-### 2. Launch the terminal
-```bash
+# 1. Navigate to the dashboard
 cd dashboard
+
+# 2. Install dependencies
 npm install
+
+# 3. Start local development server
 npm run dev
 ```
 
-Open **`http://127.0.0.1:5180`** in your browser.
+Open **`http://localhost:5180`** in your browser. The terminal launches immediately in backtest mode with the bundled high-resolution session.
 
-The terminal connects immediately to live market data with zero API keys required. You can search across 800+ assets (all crypto pairs, memecoins, US equities, commodities, ETFs, and FX) using the top command bar or pressing `Enter`.
+---
 
-## Setup (Rust Simulation Runner & Data Tools)
+## Complete Guide: Recording & Generating Backtest Data
 
-To run custom backtests and record binary session archives:
+The OPEN-HFT pipeline converts real-world exchange data into high-speed binary `.hbr` (`HFTREC01`) session recordings that can be replayed and audited in the terminal.
 
-```bash
-# Prerequisites: Rust toolchain (https://rustup.rs) and Python 3.11+
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-pip install hftbacktest numpy polars numba
-
-# Build the Rust simulation runner and collector
-(cd hftbacktest && cargo build --release -p collector)
-(cd runner && cargo build --release)
+```
+┌────────────────────────┐      ┌─────────────────────────┐      ┌────────────────────────┐      ┌─────────────────────────┐
+│ 1. Capture Raw Market  │ ───> │ 2. Normalize Data       │ ───> │ 3. Execute Strategy    │ ───> │ 4. Replay in Terminal   │
+│    (tools/collect.py)  │      │    (tools/prepare.py)   │      │    (runner / session)  │      │    (dashboard / UI)     │
+└────────────────────────┘      └─────────────────────────┘      └────────────────────────┘      └─────────────────────────┘
+  WebSockets / L2 Feeds            .npz Depth & Latency             .hbr Binary Archive              Interactive Visualizer
 ```
 
-### Record market data and generate sessions
+### Stage 1: Capture Raw Market Feeds
+
+Record live WebSocket depth diffs and market trades directly from exchange endpoints:
+
 ```bash
-# Start background collector for target symbols
+# Start background recording for target instruments
 python tools/collect.py start --symbols BTCUSDT ETHUSDT
-python tools/collect.py status
-python tools/collect.py stop
 
-# Convert raw feed into an optimized session archive and replay it
-python tools/session.py --raw data/raw/btcusdt_20260915.gz --name btcusdt_session
-cd dashboard && npm run dev
+# Monitor ingress packet rates and file sizes
+python tools/collect.py status
+
+# Stop recording when done
+python tools/collect.py stop
 ```
 
-## Dashboard parameters and shortcuts
+Raw data is saved to `data/raw/<symbol>_<timestamp>.gz`.
 
-### URL Parameters
+Alternatively, build and run the high-throughput native Rust collector:
+```bash
+cargo run --release -p collector -- --symbols BTCUSDT,ETHUSDT --output data/raw/
+```
 
-| Parameter | Meaning |
-| --- | --- |
-| `symbol=<ticker>` | Active instrument (e.g. `BTCUSDT`, `PEPEUSDT`, `NVDA`, `GOLD`, `SPY`, `JPM`) |
-| `mode=live\|replay` | Toggle between live streaming and historical session playback |
-| `session=<name>` | Which `.hbr` backtest session archive to load in replay mode |
-| `tile=<0-9>` | Isolate an individual tile full-screen (`0` for all tiles) |
-| `t=<ns>` | Playback timestamp in session nanoseconds |
-| `speed=<x>` | Replay playback velocity multiplier (0.5x, 1x, 2x, 5x, 20x) |
-| `ladder=levels\|ticks` | Ladder view: populated levels only, or classical tick ladder |
+---
 
-### Keyboard Shortcuts
+### Stage 2: Normalize Feeds & Calibrate Latency Models
 
-| Key | Action |
-|:---:|:---|
-| **`0`** | View all 9 tiles in full grid |
-| **`1` – `9`** | Focus individual tile edge-to-edge |
-| **`F8`** or **`D`** | Open Security Description Profile (`DES`) modal |
-| **`M`** | Toggle between Real-Time Live mode and Replay mode |
-| **`SPACE`** | Play / Pause playback (Replay mode) |
+Convert raw `.gz` streams into normalized numerical arrays (`.npz`) and empirical latency profiles:
+
+```bash
+python tools/prepare.py \
+  --raw data/raw/btcusdt_20260915.gz \
+  --tick-size 0.1 \
+  --lot-size 0.001 \
+  --mul-entry 1.0 \
+  --mul-resp 1.0
+```
+
+This step generates:
+1. `data/npz/<stem>.npz`: Structured Level 2 book updates and public trade prints.
+2. `data/latency/<stem>.npz`: Feed-latency-derived order entry and acknowledgment timing models.
+3. `data/npz/<stem>.collector.json`: Network packet counts, payload bytes, and ingress telemetry.
+
+---
+
+### Stage 3: Run the Strategy & Record the Backtest (`.hbr`)
+
+The simulation runner (`runner/src/main.rs`) steps through the normalized market data, evaluates strategy order placement, updates exchange queue estimates, and writes every decision frame into a `.hbr` binary archive:
+
+#### Automated 1-Command Workflow (Recommended)
+```bash
+python tools/session.py \
+  --raw data/raw/btcusdt_20260915.gz \
+  --name my_backtest \
+  --symbol BTCUSDT \
+  --tick-size 0.1 \
+  --lot-size 0.001
+```
+
+#### Manual Rust Execution
+Compile and execute the simulation runner directly:
+
+```bash
+# Build the native simulation runner
+cd runner && cargo build --release && cd ..
+
+# Run backtest simulation with power-law queue model
+./runner/target/release/stratum-runner \
+  --data data/npz/btcusdt_20260915.npz \
+  --latency data/latency/btcusdt_20260915.npz \
+  --symbol BTCUSDT \
+  --tick_size 0.1 \
+  --lot_size 0.001 \
+  --queue-model power3 \
+  --frame_ms 100 \
+  --levels 24 \
+  --out dashboard/public/sessions/my_backtest.hbr
+```
+
+#### Key Simulation Options
+| Flag | Description | Default |
+|---|---|---|
+| `--queue-model` | Queue priority model: `power3`, `power2`, `log2`, or `risk_adverse` | `power3` |
+| `--frame_ms` | Decision and recording frame interval in milliseconds | `100` |
+| `--levels` | Number of book levels recorded per side per frame | `24` |
+| `--const_latency_us` | Override with fixed round-trip microseconds (e.g. `500,500`) | Measured |
+| `--grid-num` | Number of quoting levels per side for grid strategies | `5` |
+| `--order-qty` | Quoting order lot size per level | `0.002` |
+
+---
+
+### Understanding the `.hbr` Binary Format (`HFTREC01`)
+
+The generated `.hbr` file is a zero-copy, compact binary recording containing:
+- **Magic Header**: `HFTREC01` (8 bytes).
+- **Metadata Chunk**: JSON string declaring instrument symbol, tick size, lot size, exchange name, queue model parameters, and total event counts.
+- **Time Index**: Lookup index mapping timestamps to frame byte offsets for instantaneous seeking.
+- **Binary Frames**:
+  - Exchange timestamp and local arrival timestamp.
+  - 24-level Bid/Ask book ladder with resting quantities.
+  - Active child order state: price, leaves quantity, and queue position (`front` / `ahead` / `behind`).
+  - Strategy executions, fills, and order cancellation timestamps.
+  - Hardware feed latency samples ($p_{50}, p_{95}, p_{99}$, message rates).
+
+---
+
+## Loading & Replaying Backtest Data in the Dashboard
+
+Once your `.hbr` file is created, you can load and inspect it using any of three methods:
+
+### Method 1: Mount as Default Session
+Copy the file to `dashboard/public/sessions/<name>.hbr` and pass the session name in the URL:
+```
+http://localhost:5180/?session=my_backtest
+```
+
+### Method 2: Drag and Drop HUD
+Drag any `.hbr` file from your desktop and drop it directly onto the browser window. The terminal HUD highlights with:
+```
+RELEASE TO INGEST HBR BINARY ARCHIVE
+```
+The recording parses in-memory and starts replaying immediately.
+
+### Method 3: File Picker Button
+Click **`[⊕ LOAD .HBR]`** in the top navigation bar to select and open any `.hbr` file from your local disk.
+
+---
+
+## Dynamic Multi-Asset Simulation (800+ Assets)
+
+The terminal includes a dynamic microstructure physics engine (`session_factory.ts`). When you switch symbols using the search bar (`SEC>`), quick pills, or the asset catalog (`F8` / `[DES PROFILE]`):
+
+- The engine dynamically maps the base price trajectory to the target asset's current market price.
+- Tick sizes, lot sizes, spread physics, and depth queues scale automatically (e.g., ETH at $2,650 with 0.01 tick size; SOL at $145; NVDA at $120; GOLD at $2,600).
+- Order book ladders, trade blotters, and execution logs re-anchor seamlessly to the target asset.
+
+---
+
+## Terminal Navigation & Keyboard Shortcuts
+
+Click any tile button on the header bar or use keyboard hotkeys for instant full-screen inspection:
+
+| Key | Target | Function |
+|:---:|:---:|---|
+| **`0`** | **ALL TILES** | Restores the complete 9-panel terminal overview grid. |
+| **`1`** | **BOOK** | Level 2 order book ladder with centered price column and split queue bars. |
+| **`2`** | **QUEUE** | Real-time queue breakdown (`ahead \| ours \| behind`), hits, and resting wait times. |
+| **`3`** | **LATENCY** | Feed receipt latency sparkline, jitter percentiles, and dual-phase wire transit bars. |
+| **`4`** | **EXECUTIONS** | Tabular execution blotter with fill prices, resting times, and notional sizes. |
+| **`5`** | **MARKET** | Rolling mid-price canvas with dashed reference lines and volume bars. |
+| **`6`** | **TRADES** | Tabular Time & Sales tape with trade timestamps, side, price, size, and counterparty. |
+| **`7`** | **ORDER LOG** | Lifecycle audit stream (`SUBMIT`, `ACK`, `FILL`, `CXL`). |
+| **`8`** | **ENGINE** | Kernel execution throughput, tick rate, fill ratio, and memory footprint. |
+| **`9`** | **COLLECTOR** | Network ingress telemetry, packet counts, and payload integrity. |
+
+### Playback Controls
+| Shortcut | Action |
+|---|---|
+| **`SPACE`** | Play / Pause replay backtest execution |
 | **`←` / `→`** | Step 5 seconds backward / forward (`Shift` for 30s) |
-| **`↑` / `↓`** | Increase / decrease replay playback speed |
-| **`ESC`** | Close security profile modal |
+| **`↑` / `↓`** | Increase / decrease playback speed (`0.25x` to `MAX`) |
+| **`F8`** or **`D`** | Open Security Description Profile (`[DES PROFILE]`) |
+| **`F7`** | Export Transaction Cost Analysis (`[EXPORT]` TCA report) |
+| **`ESC`** | Close open modal overlays |
 
-## Regulatory Compliance Standards
+---
 
-Open-HFT computes transaction cost benchmarks aligned with institutional execution mandates:
-* **SEC Rule 605/606**: Order routing quality, effective spread, and price improvement analysis.
-* **MiFID II RTS 27/28**: Best-Execution verification for trading desks and asset managers.
-* **SEC Rule 10b-18**: Safe Harbor volume caps and timing guardrails for corporate share repurchases.
+## Regulatory TCA & Execution Quality Analysis (`F7`)
 
-## Star History
+Click **`[EXPORT]`** or press **`F7`** to export a Transaction Cost Analysis report formatted for institutional and regulatory compliance:
 
-[![Star History Chart](https://api.star-history.com/svg?repos=LMGXENON/OPEN-HRT&type=Date)](https://star-history.com/#LMGXENON/OPEN-HRT&Date)
+- **Implementation Shortfall (IS)**:
+  $$\text{IS}_{\text{bps}} = \text{Side} \times \left( \frac{P_{\text{fill}} - P_{\text{arrival}}}{P_{\text{arrival}}} \right) \times 10{,}000$$
+  Measures true execution slippage against the mid-market price at decision arrival.
 
-## Fonts and Licenses
+- **Adverse Selection Markouts (+100ms, +1s, +5s, +30s)**:
+  $$\text{Markout}_\tau = \text{Side} \times \left( \frac{P_{\text{mid}}(t + \tau) - P_{\text{fill}}}{P_{\text{fill}}} \right) \times 10{,}000$$
+  Identifies whether passive fills captured spread from retail flow or suffered toxic adverse selection from aggressive informed flow.
 
-* Typography: The Ultimate Oldschool PC Font Pack (`WebPlus_IBM_VGA_9x16`, `WebPlus_IBM_EGA_8x8`) licensed under CC BY-SA 4.0; Departure Mono licensed under SIL Open Font License.
-* Open-HFT is open-source software released under the [MIT License](LICENSE).
+- **Regulatory Compliance Standards**:
+  - **SEC Rule 605/606**: Effective vs. quoted spread, price improvement, and venue routing quality.
+  - **MiFID II RTS 27/28**: Best-Execution validation for trading desks and asset managers.
+
+---
+
+## Repository Structure
+
+```
+├── dashboard/              # Vite + TypeScript web terminal UI
+│   ├── src/
+│   │   ├── main.ts         # Application entry point & tile manager
+│   │   ├── nav_bar.ts      # Top navigation, playback scrubber, and asset search
+│   │   ├── session.ts      # Binary .hbr parser and playback clock
+│   │   ├── session_factory.ts # Multi-asset dynamic scaling engine
+│   │   ├── tca_engine.ts   # Implementation shortfall & markout calculation
+│   │   └── panels/         # Individual panel renderers (Tiles 1 to 9)
+│   └── public/sessions/    # Preloaded .hbr binary recordings
+├── runner/                 # Native Rust backtest executor & binary frame recorder
+│   └── src/
+│       ├── main.rs         # CLI runner and strategy execution loop
+│       ├── queue.rs        # Queue position model instrumentation
+│       └── record.rs       # HFTREC01 binary serializer
+├── tools/                  # Python data preparation and collector utilities
+│   ├── collect.py          # Real-time WebSocket L2 depth & trade collector
+│   ├── prepare.py          # Raw feed to normalized NPZ & latency generator
+│   └── session.py          # 1-command pipeline: raw feed -> .hbr session
+└── data/                   # Data directory (raw feeds, npz caches, session files)
+```
+
+---
+
+## License
+
+Open-HFT is open-source software licensed under the [MIT License](LICENSE).
+Bitmap fonts from The Ultimate Oldschool PC Font Pack (`WebPlus_IBM_VGA_9x16`, `WebPlus_IBM_EGA_8x8`) licensed under CC BY-SA 4.0; Departure Mono licensed under SIL Open Font License.

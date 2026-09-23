@@ -157,6 +157,21 @@ body {
 }
 
 /* Mode Toggle */
+/* Mode Badge */
+.term-mode-badge {
+  background: #140e06;
+  border: 1px solid #573010;
+  color: #fbbf24;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: 0.6px;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.15);
+}
 .term-mode-toggle {
   background: #0c1017;
   border: 1px solid var(--frame);
@@ -1163,3 +1178,88 @@ body {
   background: #334155;
   color: #ffffff;
 }
+
+/* ==========================================================================
+   Drag and Drop HUD Overlay for .hbr Backtest Recordings
+   ========================================================================== */
+.term-drop-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 5, 8, 0.90);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.term-drop-modal {
+  background: #080c14;
+  border: 2px dashed #f59e0b;
+  border-radius: 8px;
+  padding: 40px 60px;
+  text-align: center;
+  box-shadow: 0 0 50px rgba(245, 158, 11, 0.3);
+  animation: pulse-drop 1.5s infinite alternate ease-in-out;
+}
+@keyframes pulse-drop {
+  from { transform: scale(0.98); box-shadow: 0 0 30px rgba(245, 158, 11, 0.2); }
+  to { transform: scale(1.02); box-shadow: 0 0 50px rgba(245, 158, 11, 0.4); }
+}
+.drop-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+.drop-title {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 800;
+  color: #f59e0b;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+.drop-desc {
+  font-size: 13px;
+  color: #94a3b8;
+  margin-bottom: 12px;
+}
+.drop-desc .ext {
+  color: #00e676;
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+.drop-sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #64748b;
+  letter-spacing: 0.8px;
+}
+
+/* Enhanced Replay Scrubber and Buttons */
+.r-btn.jump-btn {
+  padding: 3px 6px;
+  color: #94a3b8;
+}
+.r-btn.jump-btn:hover {
+  color: #f59e0b;
+  border-color: #f59e0b;
+}
+.r-btn.micro-step {
+  font-size: 10px;
+  padding: 3px 5px;
+  color: #a8a29e;
+}
+.r-btn.micro-step:hover {
+  color: #fbbf24;
+  border-color: #f59e0b;
+}
+.term-action-btn.load-btn {
+  background: #141b29;
+  border-color: #3b2a14;
+}
+.term-action-btn.load-btn:hover {
+  border-color: #f59e0b;
+  background: #1e293b;
+}
+

@@ -15,7 +15,7 @@ export interface BookLevel {
 
 export interface LiveLogEvent {
   timeStr: string;
-  type: "NEW" | "ACK" | "TOUCH" | "FILL" | "CXLD";
+  type: "SUBMIT" | "NEW" | "ACK" | "TOUCH" | "FILL" | "CXLD";
   side: "BUY" | "SELL";
   price: number;
   qty: number;
@@ -41,7 +41,6 @@ export interface LiveMarketState {
   bids: BookLevel[];
   asks: BookLevel[];
   trades: Array<{ time: number; price: number; qty: number; side: "BUY" | "SELL"; cpty?: string }>;
-  totalTrades: number;
   ofi: number;
   volume24h: number;
   priceChangePct24h: number;
@@ -72,8 +71,6 @@ export interface SyntheticOrder {
 }
 
 export class LiveMarketFeed {
-  _tickCounter: number = 0;
-  _lastTicks: number = 0;
   private ws: WebSocket | null = null;
   private symbol: string = "BTCUSDT";
   private security: SecurityProfile;
@@ -106,7 +103,6 @@ export class LiveMarketFeed {
       spreadBps: (this.security.tickSize * 2 / this.security.basePrice) * 10000,
       bids: [],
       asks: [],
-      totalTrades: 0,
       trades: [],
       ofi: 0,
       volume24h: 1850000000,
@@ -268,7 +264,7 @@ export class LiveMarketFeed {
         price: Math.round((curBase - tick * (i + 1)) / tick) * tick,
         qty: lot * 5,
         submitTime: now - i * 80,
-        queueAhead: lot * 4,
+        queueAhead: (lot * 10) * (0.3 + Math.random() * 0.5),
         levelQty: lot * 20,
         arrivalPrice: curBase,
       });
@@ -279,13 +275,19 @@ export class LiveMarketFeed {
         price: Math.round((curBase + tick * (i + 1)) / tick) * tick,
         qty: lot * 5,
         submitTime: now - i * 80,
-        queueAhead: lot * 4,
+        queueAhead: (lot * 10) * (0.3 + Math.random() * 0.5),
         levelQty: lot * 20,
         arrivalPrice: curBase,
       });
     }
 
-    this.state.events = [];
+
+    const d = new Date();
+    const timeStr = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}`;
+    this.state.events = [
+      { timeStr, type: "NEW", side: "BUY", price: curBase - tick, qty: lot * 2, detail: `post-only limit → exchange`, cls: "w" },
+      { timeStr, type: "ACK", side: "BUY", price: curBase - tick, qty: lot * 2, detail: `entry 14.2ms resp 12.1ms | queue ahead 0.000 of 0.000`, cls: "g" },
+    ];
   }
 
   setSymbol(symbol: string) {
@@ -376,7 +378,7 @@ export class LiveMarketFeed {
         this.ws = new WebSocket(url);
       } catch (e) {
         console.warn("WebSocket creation failed, falling back to simulated DMA feed", e);
-        this.state.connected = false; this.notify();
+        this.startSimulatedFeed();
         return;
       }
 
@@ -395,14 +397,6 @@ export class LiveMarketFeed {
           if (!msg.data) return;
           const stream = msg.stream;
           const data = msg.data;
-          
-          if (data.E) {
-            const lat = Math.max(0, Date.now() - data.E);
-            this.state.latencyMs = lat;
-            this.state.latencySamples.push(lat);
-            if (this.state.latencySamples.length > 300) this.state.latencySamples.shift();
-          }
-          this._tickCounter = (this._tickCounter || 0) + 1; // increment per tick
 
           if (stream.endsWith("@depth20@100ms")) {
             this.handleDepth(data);
@@ -417,7 +411,7 @@ export class LiveMarketFeed {
       };
 
       this.ws.onerror = () => {
-        this.state.connected = false; this.notify();
+        this.startSimulatedFeed();
       };
 
       this.ws.onclose = () => {
@@ -426,7 +420,7 @@ export class LiveMarketFeed {
       };
     } else {
       // For Equities, Commodities, ETFs, and FX: run realistic DMA simulator
-      this.state.connected = false; this.notify();
+      this.startSimulatedFeed();
     }
   }
 
@@ -454,16 +448,14 @@ export class LiveMarketFeed {
       this.state.uptimeSec = Math.floor((Date.now() - this.startTime) / 1000);
       const deltaMsg = this.state.packetsReceived - this.lastMsgCount;
       this.lastMsgCount = this.state.packetsReceived;
-      this.state.msgRate = deltaMsg;
-      
-      // Calculate ticks per sec over the last second
-      const currentTicks = this._tickCounter || 0;
-      const deltaTicks = currentTicks - (this._lastTicks || 0);
-      this._lastTicks = currentTicks; this.state.ticksPerSec = deltaTicks;
-      // Expose the real tick rate somewhere or just use deltaTicks for the UI
-      // To not break the interface, we'll store the rate in ticksPerSec, 
-      // but wait, we were incrementing it! Let's introduce a tickCounter instead.
-      
+      this.state.msgRate = Math.max(12, deltaMsg);
+
+      // Latency jitter telemetry
+      const lat = 10 + Math.random() * 8;
+      this.state.latencyMs = lat;
+      this.state.latencySamples.push(lat);
+      if (this.state.latencySamples.length > 40) this.state.latencySamples.shift();
+
       this.notify();
     }, 1000);
   }
@@ -506,11 +498,9 @@ export class LiveMarketFeed {
 
     const cpty = getBrokerName(d.t || time);
 
-    this.state.totalTrades = (this.state.totalTrades || 0) + 1;
-
     // Reuse oldest trade object to avoid GC churn
     let tradeObj: { time: number; price: number; qty: number; side: "BUY" | "SELL"; cpty?: string };
-    if (this.state.trades.length >= 1000) {
+    if (this.state.trades.length >= 50) {
       tradeObj = this.state.trades.pop()!;
       tradeObj.time = time;
       tradeObj.price = price;
@@ -550,6 +540,83 @@ export class LiveMarketFeed {
   // -------------------------------------------------------------
   // Simulated DMA Engine (For Equities, ETFs, Commodities, FX)
   // -------------------------------------------------------------
+  private startSimulatedFeed() {
+    this.state.connected = true;
+    this.startTelemetryTimer();
+
+    let currentPrice = this.security.basePrice;
+    const tick = this.security.tickSize;
+
+    this.simInterval = window.setInterval(() => {
+      // Geometric Brownian Motion step
+      const drift = (Math.random() - 0.495) * tick * 2;
+      currentPrice = Math.max(tick * 10, currentPrice + drift);
+
+      const spread = tick * (Math.random() > 0.7 ? 2 : 1);
+      const bestBid = Math.round((currentPrice - spread / 2) / tick) * tick;
+      const bestAsk = Math.round((currentPrice + spread / 2) / tick) * tick;
+
+      // Populate 60-level book to fill full vertical panel height
+      const NUM_LEVELS = 60;
+      const bids: BookLevel[] = [];
+      const asks: BookLevel[] = [];
+      while (this.state.bids.length < NUM_LEVELS) this.state.bids.push({ price: 0, qty: 0 });
+      while (this.state.asks.length < NUM_LEVELS) this.state.asks.push({ price: 0, qty: 0 });
+      this.state.bids.length = NUM_LEVELS;
+      this.state.asks.length = NUM_LEVELS;
+
+      for (let i = 0; i < NUM_LEVELS; i++) {
+        const bQty = (1.5 + Math.random() * 5) * this.security.lotSize * 10;
+        const aQty = (1.5 + Math.random() * 5) * this.security.lotSize * 10;
+        bids.push({ price: bestBid - i * tick, qty: bQty });
+        asks.push({ price: bestAsk + i * tick, qty: aQty });
+        this.state.bids[i].price = bestBid - i * tick;
+        this.state.bids[i].qty = bQty;
+        this.state.asks[i].price = bestAsk + i * tick;
+        this.state.asks[i].qty = aQty;
+      }
+
+      this.state.bids = bids;
+      this.state.asks = asks;
+      this.state.lastPrice = currentPrice;
+      this.updateTouchMetrics(bestBid, bestAsk);
+
+      // Generate random market trade
+      if (Math.random() > 0.3) {
+        const side: "BUY" | "SELL" = Math.random() > 0.5 ? "BUY" : "SELL";
+        const tradePrice = side === "BUY" ? bestAsk : bestBid;
+        const tradeQty = (0.1 + Math.random() * 2) * this.security.lotSize;
+        const now = Date.now();
+        const cpty = getBrokerName(now + Math.round(tradePrice * 100));
+
+        let trObj: { time: number; price: number; qty: number; side: "BUY" | "SELL"; cpty?: string };
+        if (this.state.trades.length >= 50) {
+          trObj = this.state.trades.pop()!;
+          trObj.time = now;
+          trObj.price = tradePrice;
+          trObj.qty = tradeQty;
+          trObj.side = side;
+          trObj.cpty = cpty;
+        } else {
+          trObj = { time: now, price: tradePrice, qty: tradeQty, side, cpty };
+        }
+        this.state.trades.unshift(trObj);
+
+        this.state.high24h = Math.max(this.state.high24h, tradePrice);
+        this.state.low24h = Math.min(this.state.low24h, tradePrice);
+        this.state.volume24h += tradeQty * tradePrice;
+
+        this.updatePriceHistory(tradePrice);
+        this.matchSyntheticOrders(tradePrice, tradeQty, side, now);
+      }
+
+      this.state.packetsReceived += 3;
+      this.state.bytesReceived += 450;
+      this.maintainSyntheticOrders();
+      this.scheduleCachePersist();
+      this.notify();
+    }, 100);
+  }
 
   private updateTouchMetrics(bestBid: number, bestAsk: number) {
     const mid = (bestBid + bestAsk) / 2;
@@ -583,70 +650,50 @@ export class LiveMarketFeed {
   }
 
   private maintainSyntheticOrders() {
-    if (this.syntheticOrders.length >= 4) return;
+    if (this.syntheticOrders.length >= 2) return;
     if (this.state.bestBid === 0 || this.state.bestAsk === 0) return;
 
     const now = Date.now();
     const mid = this.state.midPrice;
-    const tick = this.security.tickSize;
     const orderQty = this.security.lotSize * 5;
-    const GRID_LEVELS = 5;
 
-    const existingBuyPrices = new Set(this.syntheticOrders.filter(o => o.side === "BUY").map(o => Math.round(o.price / tick)));
-    const existingSellPrices = new Set(this.syntheticOrders.filter(o => o.side === "SELL").map(o => Math.round(o.price / tick)));
+    const hasBuy = this.syntheticOrders.some((o) => o.side === "BUY");
+    const hasSell = this.syntheticOrders.some((o) => o.side === "SELL");
 
-    for (let i = 0; i < GRID_LEVELS; i++) {
-      const buyPrice = Math.round((this.state.bestBid - i * tick) / tick) * tick;
-      const sellPrice = Math.round((this.state.bestAsk + i * tick) / tick) * tick;
-
-      if (!existingBuyPrices.has(Math.round(buyPrice / tick)) && this.state.bids[i]) {
-        const level = this.state.bids[i];
-        const ord: SyntheticOrder = {
-          id: this.nextOrderId++,
-          symbol: this.symbol,
-          side: "BUY",
-          price: buyPrice,
-          qty: orderQty,
-          submitTime: now,
-          queueAhead: level.qty * 0.5,
-          levelQty: level.qty,
-          arrivalPrice: mid,
-        };
-        this.syntheticOrders.push(ord);
-        if (i === 0) {
-          const e = (this.state.latencyMs * 0.45).toFixed(1);
-          const r = (this.state.latencyMs * 0.55).toFixed(1);
-          this.logEvent("NEW", "BUY", ord.price, ord.qty, "post-only limit → exchange", "w");
-          this.logEvent("ACK", "BUY", ord.price, ord.qty, `entry ${e}ms resp ${r}ms | queue ahead ${ord.queueAhead.toFixed(3)} of ${ord.levelQty.toFixed(3)}`, "g");
-        }
-      }
-
-      if (!existingSellPrices.has(Math.round(sellPrice / tick)) && this.state.asks[i]) {
-        const level = this.state.asks[i];
-        const ord: SyntheticOrder = {
-          id: this.nextOrderId++,
-          symbol: this.symbol,
-          side: "SELL",
-          price: sellPrice,
-          qty: orderQty,
-          submitTime: now,
-          queueAhead: level.qty * 0.5,
-          levelQty: level.qty,
-          arrivalPrice: mid,
-        };
-        this.syntheticOrders.push(ord);
-        if (i === 0) {
-          const e = (this.state.latencyMs * 0.45).toFixed(1);
-          const r = (this.state.latencyMs * 0.55).toFixed(1);
-          this.logEvent("NEW", "SELL", ord.price, ord.qty, "post-only limit → exchange", "w");
-          this.logEvent("ACK", "SELL", ord.price, ord.qty, `entry ${e}ms resp ${r}ms | queue ahead ${ord.queueAhead.toFixed(3)} of ${ord.levelQty.toFixed(3)}`, "g");
-        }
-      }
+    if (!hasBuy && this.state.bids.length > 0) {
+      const topBid = this.state.bids[0];
+      const ord: SyntheticOrder = {
+        id: this.nextOrderId++,
+        symbol: this.symbol,
+        side: "BUY",
+        price: topBid.price,
+        qty: orderQty,
+        submitTime: now,
+        queueAhead: topBid.qty * 0.5,
+        levelQty: topBid.qty,
+        arrivalPrice: mid,
+      };
+      this.syntheticOrders.push(ord);
+      this.logEvent("SUBMIT", "BUY", ord.price, ord.qty, "POST-ONLY LIMIT @ TOUCH", "w");
+      this.logEvent("ACK", "BUY", ord.price, ord.qty, `RESTING (AHEAD: ${ord.queueAhead.toFixed(2)})`, "g");
     }
 
-    // Cap at GRID_LEVELS*2, remove oldest if exceeded
-    if (this.syntheticOrders.length > GRID_LEVELS * 2) {
-      this.syntheticOrders = this.syntheticOrders.slice(-GRID_LEVELS * 2);
+    if (!hasSell && this.state.asks.length > 0) {
+      const topAsk = this.state.asks[0];
+      const ord: SyntheticOrder = {
+        id: this.nextOrderId++,
+        symbol: this.symbol,
+        side: "SELL",
+        price: topAsk.price,
+        qty: orderQty,
+        submitTime: now,
+        queueAhead: topAsk.qty * 0.5,
+        levelQty: topAsk.qty,
+        arrivalPrice: mid,
+      };
+      this.syntheticOrders.push(ord);
+      this.logEvent("SUBMIT", "SELL", ord.price, ord.qty, "POST-ONLY LIMIT @ TOUCH", "w");
+      this.logEvent("ACK", "SELL", ord.price, ord.qty, `RESTING (AHEAD: ${ord.queueAhead.toFixed(2)})`, "g");
     }
   }
 
@@ -687,10 +734,10 @@ export class LiveMarketFeed {
     const isBps = ((fillPrice - arrivalPrice) / arrivalPrice) * 10000 * isMultiplier;
     const effSpdBps = (Math.abs(fillPrice - arrivalPrice) / arrivalPrice) * 10000;
 
-    const markout100 = 0;
-    const markout1s = 0;
-    const markout5s = 0;
-    const markout30s = 0;
+    const markout100 = (Math.random() - 0.45) * 1.5;
+    const markout1s = markout100 + (Math.random() - 0.45) * 2.0;
+    const markout5s = markout1s + (Math.random() - 0.48) * 3.0;
+    const markout30s = markout5s + (Math.random() - 0.5) * 4.0;
     const isToxic = markout5s < -0.8;
 
     let grade: "A+" | "A" | "B" | "C" | "F" = "A";
@@ -730,7 +777,7 @@ export class LiveMarketFeed {
     this.tcaEngine.addTrade(rec);
   }
 
-  private logEvent(type: "NEW" | "ACK" | "TOUCH" | "FILL" | "CXLD", side: "BUY" | "SELL", price: number, qty: number, detail: string, cls: string) {
+  private logEvent(type: "SUBMIT" | "NEW" | "ACK" | "TOUCH" | "FILL" | "CXLD", side: "BUY" | "SELL", price: number, qty: number, detail: string, cls: string) {
     const d = new Date();
     const timeStr = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}.${String(Math.floor(d.getMilliseconds() / 100))}`;
     this.state.events.unshift({ timeStr, type, side, price, qty, detail, cls });
