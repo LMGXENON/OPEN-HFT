@@ -799,6 +799,10 @@ body {
   font-size: 11px;
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: 10px;
 }
 
 .panel > .body {

@@ -154,7 +154,7 @@ export class LatencyPanel extends Panel {
   }
 
   renderLive(stats: { pingMs: number; p50: number; p95: number; p99: number; samples: number[]; msgRate: number }): void {
-    const W = this.cols * CW;
+    const W = this.exactWidth;
     const rows = this.rows;
     const cols = this.cols;
     const key = `${Math.round(stats.pingMs * 10)}|${Math.round(stats.p50 * 10)}|${stats.msgRate}|${W}|${rows}|${cols}`;
@@ -278,8 +278,9 @@ export class LatencyPanel extends Panel {
 
     // 5. Hardware & Telemetry Audit Grid (Fills all space with zero void)
     const out: string[] = [];
-    out.push("");
-    out.push(sp("d", "─".repeat(Math.max(1, cols - 2))));
+    if (isFocus) {
+      out.push("");
+      out.push(sp("d", "─".repeat(Math.max(1, cols - 2))));
     out.push(
       sp("ours", "HARDWARE ACCELERATION & LOW-LATENCY NETWORK TELEMETRY") +
       sp("d", "  [SOLARFLARE EF_VI DIRECT USER-SPACE INGRESS]")
@@ -327,6 +328,7 @@ export class LatencyPanel extends Panel {
       out.push(sp("d", "5. MATCHING ENGINE FIFO QUEUE     : ") + sp("c", `${(stats.pingMs * 0.18).toFixed(2)} ms`) + sp("d", "  [Touch Priority Buffer]"));
       out.push(sp("d", "6. WIRE ACKNOWLEDGMENT (EGRESS)   : ") + sp("c", `${(stats.pingMs * 0.40).toFixed(1)} ms`) + sp("d", "  [TCP Direct Push]"));
       out.push(sp("d", "TOTAL END-TO-END TICK-TO-TRADE    : ") + sp("g", `${(stats.pingMs + 0.002).toFixed(2)} ms`) + sp("d", "  [SLA PASSED: 100%]"));
+    }
     }
 
     this.foot.innerHTML = out.join("\n");
