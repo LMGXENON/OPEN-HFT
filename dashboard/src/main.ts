@@ -248,7 +248,8 @@ export class TerminalApp {
       const p95 = samples.length ? samples[Math.floor(samples.length * 0.95)] : 18;
       const p99 = samples.length ? samples[Math.floor(samples.length * 0.99)] : 22;
 
-      this.latencyPanel.renderLive({
+      this.latencyPanel.renderLive(state, {
+
         pingMs: state.latencyMs,
         p50,
         p95,

@@ -153,7 +153,7 @@ export class LatencyPanel extends Panel {
     this.setTitle(lat.kind === "IntpOrderLatency" ? "IntpOrderLatency" : `ConstantLatency ${lat.entry_us / 1000}/${lat.response_us / 1000} ms`);
   }
 
-  renderLive(stats: { pingMs: number; p50: number; p95: number; p99: number; samples: number[]; msgRate: number }): void {
+  renderLive(state: any, stats: { pingMs: number; p50: number; p95: number; p99: number; samples: number[]; msgRate: number }): void {
     const W = this.exactWidth;
     const rows = this.rows;
     const cols = this.cols;
@@ -227,54 +227,37 @@ export class LatencyPanel extends Panel {
     if (isFocus && rows - usedRows >= 11) {
       out.push("");
       out.push(sp("d", "─".repeat(Math.max(1, cols - 2))));
-    out.push(
-      sp("ours", "HARDWARE ACCELERATION & LOW-LATENCY NETWORK TELEMETRY") +
-      sp("d", "  [SOLARFLARE EF_VI DIRECT USER-SPACE INGRESS]")
-    );
-    out.push(sp("d", "─".repeat(Math.max(1, cols - 2))));
-    
-    out.push(
-      sp("d", "KERNEL BYPASS NIC    : ") + sp("g", "ACTIVE") +
-      sp("d", " (Solarflare OpenOnload / DPDK Zero-Copy Ring Buffer)")
-    );
-    out.push(
-      sp("d", "PTP HARDWARE CLOCK   : ") + sp("g", "LOCKED") +
-      sp("d", ` (IEEE 1588-2008 Precision Time Protocol, Drift < 12 ns)`)
-    );
-    out.push(
-      sp("d", "L2 SERIALIZATION SLA : ") + sp("w", "0.42 µs") +
-      sp("d", ` (AVX-512 SIMD Vectorized Order Book Decompressor)`)
-    );
-    out.push(
-      sp("d", "ESTIMATED FIFO QUEUE : ") + sp("c", `${(stats.pingMs * 0.18).toFixed(2)} ms`) +
-      sp("d", ` (Exchange Matching Engine Order Sequencing Buffer)`)
-    );
-    out.push(
-      sp("d", "PACKET DROP AUDIT    : ") + sp("g", "0 DROPPED") +
-      sp("d", ` (0.0000% Loss Rate │ In-Order Delivery Verified)`)
-    );
-    out.push(
-      sp("d", "OPTICAL CROSS-CONNECT: ") + sp("w", "DIRECT FIBER") +
-      sp("d", ` (Exchange Colocation Meet-Me-Room Patch)`)
-    );
-    out.push(
-      sp("d", "KILL-SWITCH CIRCUIT  : ") + sp("g", "ARMED & ENGAGED") +
-      sp("d", ` (Auto-Liquidation Threshold: 25.0 bps Drawdown)`)
-    );
-
-    if (rows - usedRows >= 22) {
-      out.push("");
+      out.push(
+        sp("ours", "NETWORK INGRESS TELEMETRY & LIVE STATE DIAGNOSTICS")
+      );
       out.push(sp("d", "─".repeat(Math.max(1, cols - 2))));
-      out.push(sp("ours", "END-TO-END SUB-MICROSECOND COMPONENT BREAKDOWN"));
-      out.push(sp("d", "─".repeat(Math.max(1, cols - 2))));
-      out.push(sp("d", "1. NIC INGRESS WIRE (FIBER)       : ") + sp("c", `${(stats.pingMs * 0.42).toFixed(1)} ms`) + sp("d", "  [WAN Optical Transit]"));
-      out.push(sp("d", "2. KERNEL BYPASS DEMUX (EF_VI)    : ") + sp("w", "0.28 µs") + sp("d", "  [Zero-Copy Ring Buffer]"));
-      out.push(sp("d", "3. L2 DESERIALIZATION (AVX-512)   : ") + sp("w", "0.42 µs") + sp("d", "  [SIMD Parallel Parser]"));
-      out.push(sp("d", "4. STRATEGY ALPHA INFERENCE       : ") + sp("w", "1.15 µs") + sp("d", "  [Pre-Trained Fast Model]"));
-      out.push(sp("d", "5. MATCHING ENGINE FIFO QUEUE     : ") + sp("c", `${(stats.pingMs * 0.18).toFixed(2)} ms`) + sp("d", "  [Touch Priority Buffer]"));
-      out.push(sp("d", "6. WIRE ACKNOWLEDGMENT (EGRESS)   : ") + sp("c", `${(stats.pingMs * 0.40).toFixed(1)} ms`) + sp("d", "  [TCP Direct Push]"));
-      out.push(sp("d", "TOTAL END-TO-END TICK-TO-TRADE    : ") + sp("g", `${(stats.pingMs + 0.002).toFixed(2)} ms`) + sp("d", "  [SLA PASSED: 100%]"));
-    }
+      
+      const megabytes = (state.bytesReceived / 1024 / 1024).toFixed(2);
+      
+      out.push(
+        sp("d", "CONNECTION STATE     : ") + sp(state.connected ? "g" : "r", state.connected ? "CONNECTED" : "DISCONNECTED") +
+        sp("d", " (WebSocket Secure / Direct Ingress)")
+      );
+      out.push(
+        sp("d", "UPTIME (SESSION)     : ") + sp("g", `${state.uptimeSec}s`) +
+        sp("d", ` (Continuous Feed Monitor)`)
+      );
+      out.push(
+        sp("d", "PACKETS RECEIVED     : ") + sp("w", `${state.packetsReceived.toLocaleString()}`) +
+        sp("d", ` (Total JSON Payloads Processed)`)
+      );
+      out.push(
+        sp("d", "DATA TRANSFERRED     : ") + sp("c", `${megabytes} MB`) +
+        sp("d", ` (Cumulative Network Bandwidth)`)
+      );
+      out.push(
+        sp("d", "AVERAGE PACKET RATE  : ") + sp("g", `${(state.packetsReceived / Math.max(1, state.uptimeSec)).toFixed(1)} pkts/s`) +
+        sp("d", ` (Sustained Ingress Throughput)`)
+      );
+      out.push(
+        sp("d", "LIVE LATENCY JITTER  : ") + sp("w", `${(stats.pingMs - stats.p50).toFixed(1)} ms`) +
+        sp("d", ` (Deviation from Moving Median)`)
+      );
     }
 
     this.foot.innerHTML = out.join("\n");
