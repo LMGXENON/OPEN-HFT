@@ -1792,10 +1792,16 @@ body {
   border-bottom: 1px solid #091628;
   border-bottom: 1px solid #14100a;
 }
+.tear-table .pos { color: #10b981; font-weight: 700; }
+.tear-table .neg { color: #f43f5e; font-weight: 700; }
+.tear-table .dim { color: #64748b; }
 .tear-table .pos { color: #00e676; font-weight: 700; }
 .tear-table .neg { color: #ff3344; font-weight: 700; }
 .tear-table .dim { color: #78716c; }
 .tear-table .highlight-row {
+  background: #0a1f36;
+  border-top: 1px solid #00d4ff;
+  border-bottom: 1px solid #00d4ff;
   background: #241c10;
   border-top: 1px solid var(--accent);
   border-bottom: 1px solid var(--accent);
