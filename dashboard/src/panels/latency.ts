@@ -226,7 +226,7 @@ export class LatencyPanel extends Panel {
       (cols >= 65 ? sp("d", `   (DIRECT DMA)`) : "");
 
     // 4. Round Trip Canvas (populated when rows > 10)
-    const nTrip = isFocus ? Math.min(10, Math.max(4, Math.floor((rows - 22) / 1.5))) : Math.max(0, rows - sparkRows - 6);
+    const nTrip = isFocus ? Math.min(10, Math.max(4, Math.floor((rows - 22) / 1.5))) : Math.max(0, rows - sparkRows - 4);
     if (nTrip > 0) {
       const tctx = fitCanvas(this.trips, W, nTrip * CH);
       tctx.fillStyle = "#080b12";
@@ -282,9 +282,9 @@ export class LatencyPanel extends Panel {
 
     // 5. Hardware & Telemetry Audit Grid (Fills all space with zero void)
     const out: string[] = [];
-    out.push("");
-    out.push(sp("d", "─".repeat(Math.max(1, cols - 2))));
-    if (isFocus) {
+    const usedRows = 4 + sparkRows + nTrip; // Top(2) + Mid(2) + Spark + Trips
+    
+    if (isFocus && rows - usedRows >= 11) {
       out.push("");
       out.push(sp("d", "─".repeat(Math.max(1, cols - 2))));
     out.push(
@@ -322,7 +322,7 @@ export class LatencyPanel extends Panel {
       sp("d", ` (Auto-Liquidation Threshold: 25.0 bps Drawdown)`)
     );
 
-    if (rows >= 28) {
+    if (rows - usedRows >= 22) {
       out.push("");
       out.push(sp("d", "─".repeat(Math.max(1, cols - 2))));
       out.push(sp("ours", "END-TO-END SUB-MICROSECOND COMPONENT BREAKDOWN"));

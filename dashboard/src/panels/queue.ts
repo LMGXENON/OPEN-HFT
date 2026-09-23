@@ -84,11 +84,14 @@ export class QueuePanel extends Panel {
         " " +
         bar;
       out.push(line);
+      const isFocus = cols >= 60 && rows >= 20;
+      if (out.length >= rows - (isFocus ? 5 : 0)) break;
     }
     if (o1 === o0) out.push(sp("d", "no working orders"));
 
     // session-so-far statistics from the recorded order events
-    if (rows - out.length >= 5) {
+    const isFocus = cols >= 60 && rows >= 20;
+    if (isFocus && rows - out.length >= 5) {
       const isWide = cols >= 65;
       const tSub = isWide ? " submitted  " : " sub  ";
       const tAcc = isWide ? " accepted  " : " acc  ";
@@ -259,11 +262,13 @@ export class QueuePanel extends Panel {
         bar;
 
       out.push(line);
-      if (out.length >= rows - 5) break;
+      const isFocus = cols >= 60 && rows >= 20;
+      if (out.length >= rows - (isFocus ? 5 : 0)) break;
     }
 
     // session-so-far statistics
-    if (rows - out.length >= 5) {
+    const isFocus = cols >= 60 && rows >= 20;
+    if (isFocus && rows - out.length >= 5) {
       out.push("");
       out.push(sp("d", "─".repeat(Math.max(1, cols - 1))));
       out.push(
