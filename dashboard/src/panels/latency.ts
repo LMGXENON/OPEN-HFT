@@ -160,22 +160,18 @@ export class LatencyPanel extends Panel {
     const key = `${Math.round(stats.pingMs * 10)}|${Math.round(stats.p50 * 10)}|${stats.msgRate}|${W}|${rows}|${cols}`;
     if (!this.changed(key)) return;
 
-    const isWide = cols >= 60;
-    const hdr1 = isWide ? "DIRECT FEED LATENCY  exchange ts → local receipt   " : "DIRECT LATENCY exchange→local ";
-    const txtJitt = isWide ? "jitter p50 " : "jit p50 ";
-    const txtRate = isWide ? "  rate: " : "  rt: ";
-
     // 1. Header Metrics
     this.top.innerHTML =
-      sp("d", hdr1) +
+      sp("d", "FEED LATENCY  exchange ts → local receipt   ") +
       sp("w", `${stats.pingMs.toFixed(1)} ms`) +
       "\n" +
-      sp("d", txtJitt) +
+      sp("d", "jitter p50 ") +
       sp("g", `${stats.p50.toFixed(1)} ms`) +
       sp("d", "  p95 ") +
       sp("c", `${stats.p95.toFixed(1)} ms`) +
-      (cols >= 50 ? sp("d", "  p99 ") + sp("r", `${stats.p99.toFixed(1)} ms`) : "") +
-      sp("d", txtRate) +
+      sp("d", "  p99 ") +
+      sp("r", `${stats.p99.toFixed(1)} ms`) +
+      sp("d", `  rate: `) +
       sp("w", `${stats.msgRate} msg/s`);
 
     // 2. Gateway Ping Sparkline Canvas
@@ -219,11 +215,10 @@ export class LatencyPanel extends Panel {
     // 3. Sub-header
     this.mid.innerHTML =
       "\n" +
-      sp("d", isWide ? "ORDER ROUND TRIP  request → " : "ROUND TRIP  req → ") +
+      sp("d", "ORDER ROUND TRIP  req → ") +
       sp("c", "matching engine") +
       sp("d", " → ") +
-      sp("m", "wire confirmation") +
-      (cols >= 65 ? sp("d", `   (DIRECT DMA)`) : "");
+      sp("m", "wire confirmation");
 
     // 4. Round Trip Canvas (populated when rows > 10)
     const nTrip = isFocus ? Math.min(10, Math.max(4, Math.floor((rows - 22) / 1.5))) : Math.max(0, rows - sparkRows - 4);
