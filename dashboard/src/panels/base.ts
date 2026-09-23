@@ -45,12 +45,21 @@ export abstract class Panel {
     this.titleEl.innerHTML = `<span class="n">${this.num}</span> ${esc(this.name)}<span class="right">${esc(right)}</span>`;
   }
 
+  get exactWidth(): number {
+    const cs = getComputedStyle(this.body);
+    return this.body.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);
+  }
+  get exactHeight(): number {
+    const cs = getComputedStyle(this.body);
+    return this.body.clientHeight - (parseFloat(cs.paddingTop) || 0) - (parseFloat(cs.paddingBottom) || 0);
+  }
+
   /** Available rows / columns of the body in character cells. */
   get rows(): number {
-    return Math.max(1, Math.floor(this.body.clientHeight / CH));
+    return Math.max(1, Math.floor(this.exactHeight / CH));
   }
   get cols(): number {
-    return Math.max(1, Math.floor(this.body.clientWidth / CW));
+    return Math.max(1, Math.floor(this.exactWidth / CW));
   }
 
   /** Skip DOM rebuilds when nothing relevant changed. */
