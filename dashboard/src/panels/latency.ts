@@ -233,21 +233,23 @@ export class LatencyPanel extends Panel {
       tctx.textBaseline = "middle";
 
       const ping = stats.pingMs || 15;
-      const dummyEvents = [
-        { name: "ACK", side: "BUY", px: "TOUCH-1", entry: ping * 0.42, resp: ping * 0.58, col: "#00e676" },
-        { name: "FILL", side: "BUY", px: "PASSIVE", entry: ping * 0.38, resp: ping * 0.62, col: "#ffcc00" },
-        { name: "ACK", side: "SELL", px: "TOUCH+1", entry: ping * 0.45, resp: ping * 0.55, col: "#00e676" },
-        { name: "CXL", side: "BUY", px: "STALE", entry: ping * 0.35, resp: ping * 0.48, col: "#78716c" },
-        { name: "ACK", side: "BUY", px: "TOUCH-2", entry: ping * 0.40, resp: ping * 0.52, col: "#00e676" },
-        { name: "FILL", side: "SELL", px: "MAKER", entry: ping * 0.44, resp: ping * 0.61, col: "#ffcc00" },
-        { name: "ACK", side: "SELL", px: "TOUCH+2", entry: ping * 0.39, resp: ping * 0.56, col: "#00e676" },
-        { name: "TOUCH", side: "BUY", px: "IN-FLIGHT", entry: ping * 0.41, resp: ping * 0.51, col: "#00e5ff" },
+      const tNow = Date.now();
+      
+      const dynEvents = [
+        { name: "ACK", side: "BUY", px: "TOUCH-1", entry: ping * (0.4 + Math.sin(tNow / 1000) * 0.05), resp: ping * (0.5 + Math.cos(tNow / 800) * 0.1), col: "#00e676" },
+        { name: "FILL", side: "BUY", px: "PASSIVE", entry: ping * (0.35 + Math.cos(tNow / 1200) * 0.06), resp: ping * (0.6 + Math.sin(tNow / 1500) * 0.08), col: "#ffcc00" },
+        { name: "ACK", side: "SELL", px: "TOUCH+1", entry: ping * (0.42 + Math.sin(tNow / 900) * 0.04), resp: ping * (0.53 + Math.cos(tNow / 1100) * 0.09), col: "#00e676" },
+        { name: "CXL", side: "BUY", px: "STALE", entry: ping * (0.33 + Math.cos(tNow / 1300) * 0.05), resp: ping * (0.45 + Math.sin(tNow / 700) * 0.06), col: "#78716c" },
+        { name: "ACK", side: "BUY", px: "TOUCH-2", entry: ping * (0.38 + Math.sin(tNow / 1400) * 0.04), resp: ping * (0.5 + Math.cos(tNow / 1000) * 0.07), col: "#00e676" },
+        { name: "FILL", side: "SELL", px: "MAKER", entry: ping * (0.4 + Math.cos(tNow / 800) * 0.05), resp: ping * (0.58 + Math.sin(tNow / 1200) * 0.09), col: "#ffcc00" },
+        { name: "ACK", side: "SELL", px: "TOUCH+2", entry: ping * (0.37 + Math.sin(tNow / 1100) * 0.03), resp: ping * (0.52 + Math.cos(tNow / 900) * 0.08), col: "#00e676" },
+        { name: "TOUCH", side: "BUY", px: "IN-FLIGHT", entry: ping * (0.39 + Math.cos(tNow / 1000) * 0.04), resp: ping * (0.49 + Math.sin(tNow / 1300) * 0.05), col: "#00e5ff" },
       ];
 
       const maxTrip = ping * 1.4;
-      const count = Math.min(nTrip, dummyEvents.length);
+      const count = Math.min(nTrip, dynEvents.length);
       for (let r = 0; r < count; r++) {
-        const ev = dummyEvents[r];
+        const ev = dynEvents[r];
         const y = r * CH + CH / 2;
 
         // Label

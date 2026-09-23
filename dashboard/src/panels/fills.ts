@@ -47,15 +47,12 @@ export class FillsPanel extends Panel {
       const side = s.eSide[i];
       const cls = side === 1 ? "bid" : "ask";
       out.push(
-        sp("w", clock(s.t0, s.eExchT[i])) +
         sp("w", lj(clock(s.t0, s.eExchT[i]), 12)) +
           " " +
           sp(cls, lj(side === 1 ? "BUY" : "SELL", 4)) +
           " " +
-          sp("ours", rj((s.eExecTick[i] * s.tickSize).toFixed(this.pxd), 9)) +
           sp("ours", rj((s.eExecTick[i] * s.tickSize).toFixed(this.pxd), 10)) +
           " " +
-          sp("w", rj(s.eQty[i].toFixed(this.qd), 6)) +
           sp("w", rj(s.eQty[i].toFixed(this.qd), 8)) +
           " " +
           sp("c", rj(dur(rested), 8)) +
@@ -104,15 +101,12 @@ export class FillsPanel extends Panel {
       const cptyStr = (t.cpty || "JPM").padStart(5);
 
       const line =
-        sp("w", t.timeStr) +
         sp("w", lj(t.timeStr, 12)) +
         " " +
         sp(sideCls, lj(t.side, 4)) +
         " " +
-        sp("ours", rj(fmtSmartPrice(t.price), 9)) +
         sp("ours", rj(fmtSmartPrice(t.price), 10)) +
         " " +
-        sp("w", rj(fmtSmartQty(t.qty), 6)) +
         sp("w", rj(fmtSmartQty(t.qty), 8)) +
         " " +
         sp("c", rj(`${t.queueWaitMs.toFixed(0)}ms`, 8)) +
@@ -128,7 +122,9 @@ export class FillsPanel extends Panel {
 
     this.content.innerHTML = out.join("\n");
     const medWait = trades.length ? trades[Math.floor(trades.length / 2)].queueWaitMs : 0;
-    this.setTitle(`${trades.length} fills │ rested p50 ${medWait.toFixed(0)}ms │ clean maker 100%`);
+    const cleanMakers = trades.filter(t => !t.isToxic).length;
+    const cleanPct = trades.length ? ((cleanMakers / trades.length) * 100).toFixed(0) : 100;
+    this.setTitle(`${trades.length} fills │ rested p50 ${medWait.toFixed(0)}ms │ clean maker ${cleanPct}%`);
   }
 
 }

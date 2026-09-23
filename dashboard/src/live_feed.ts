@@ -281,13 +281,7 @@ export class LiveMarketFeed {
       });
     }
 
-
-    const d = new Date();
-    const timeStr = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}`;
-    this.state.events = [
-      { timeStr, type: "NEW", side: "BUY", price: curBase - tick, qty: lot * 2, detail: `post-only limit → exchange`, cls: "w" },
-      { timeStr, type: "ACK", side: "BUY", price: curBase - tick, qty: lot * 2, detail: `entry 14.2ms resp 12.1ms | queue ahead 0.000 of 0.000`, cls: "g" },
-    ];
+    this.state.events = [];
   }
 
   setSymbol(symbol: string) {
@@ -454,7 +448,11 @@ export class LiveMarketFeed {
       const lat = 10 + Math.random() * 8;
       this.state.latencyMs = lat;
       this.state.latencySamples.push(lat);
-      if (this.state.latencySamples.length > 40) this.state.latencySamples.shift();
+      if (this.state.latencySamples.length > 300) this.state.latencySamples.shift();
+      
+      // Ticks per sec fluctuation
+      const baseTicks = this.state.msgRate * 5;
+      this.state.ticksPerSec = baseTicks + Math.floor(Math.random() * (baseTicks * 0.2));
 
       this.notify();
     }, 1000);

@@ -4,7 +4,6 @@
  * Implementation Shortfall (IS), and Post-Trade Adverse Selection Forensics.
  */
 
-import { getSecurity } from "./assets_directory";
 
 export interface TradeRecord {
   id: number;
@@ -72,42 +71,6 @@ export class TCAEngine {
   setSymbol(symbol: string) {
     this.symbol = symbol;
     this.trades = [];
-    const sec = getSecurity(symbol);
-    const base = sec.basePrice;
-    const tick = sec.tickSize;
-    const lot = sec.lotSize;
-    const now = Date.now();
-    for (let i = 6; i >= 1; i--) {
-      const side: "BUY" | "SELL" = i % 2 === 0 ? "BUY" : "SELL";
-      const px = side === "BUY" ? base - tick : base + tick;
-      const arr = base;
-      const isBps = side === "BUY" ? ((px - arr) / arr) * 10000 : ((arr - px) / arr) * 10000;
-      const tTime = now - i * 1200;
-      const d = new Date(tTime);
-      const timeStr = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}.${String(Math.floor(d.getMilliseconds() / 100))}`;
-      this.trades.push({
-        id: tTime,
-        timeMs: tTime,
-        timeStr,
-        side,
-        symbol,
-        qty: lot * (1 + (i % 3)),
-        price: px,
-        notional: px * lot * (1 + (i % 3)),
-        arrivalPrice: arr,
-        midPriceAtFill: base,
-        effectiveSpreadBps: 0.45,
-        implementationShortfallBps: isBps,
-        queueWaitMs: 25 + i * 4,
-        frontQtyAtAck: 40,
-        markout100msBps: 0.12,
-        markout1sBps: 0.45,
-        markout5sBps: 0.85,
-        markout30sBps: 1.15,
-        isToxic: false,
-        grade: "A",
-      });
-    }
   }
 
   clear() {

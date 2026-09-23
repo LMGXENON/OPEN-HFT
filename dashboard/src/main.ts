@@ -282,7 +282,7 @@ export class TerminalApp {
         ticksPerSec: state.ticksPerSec,
         orderCount: syntheticOrders.length,
         fillCount: trades.length,
-        memMb: 14.8,
+        memMb: 14.8 + (Math.random() * 0.4 - 0.2), // Fluctuating slightly around 14.8MB
         latencyMs: state.latencyMs,
       });
     }
