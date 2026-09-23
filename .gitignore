@@ -8,7 +8,7 @@ __pycache__/
 .claude/
 
 # recorded data and derived files (rebuild with tools/session.py)
-data/
+/data/
 
 # replay sessions are large; only the small sample built from the repo data is committed
 dashboard/public/sessions/*

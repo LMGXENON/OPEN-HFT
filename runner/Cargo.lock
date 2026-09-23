@@ -564,18 +564,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "stratum-runner"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "clap",
- "hftbacktest",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "hmac"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -764,6 +752,18 @@ name = "once_cell_polyfill"
 version = "1.70.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
+
+[[package]]
+name = "open-hrt-runner"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "clap",
+ "hftbacktest",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "pbkdf2"
