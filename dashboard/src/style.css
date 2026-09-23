@@ -584,6 +584,8 @@ body {
   margin-left: 4px;
   border-radius: 2px;
   padding: 1px 4px;
+  min-width: 65px;
+  text-align: right;
   transition: color 0.15s ease, background-color 0.35s ease, text-shadow 0.25s ease;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
@@ -795,12 +797,14 @@ body {
   color: var(--fg-dim);
   font-weight: normal;
   font-size: 11px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .panel > .body {
   flex: 1 1 auto;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
   padding: 4px 6px;
   white-space: pre;
   position: relative;
