@@ -109,13 +109,15 @@ export class LogPanel extends Panel {
       const side = ev.side === "BUY" ? "BUY " : "SELL";
       const px = fmtSmartPrice(ev.price);
       const qty = fmtSmartQty(ev.qty);
-      const kcls = ev.type === "FILL" ? "y" : ev.type === "ACK" ? "g" : ev.type === "NEW" ? "w" : ev.type === "CXL" ? "d" : "r";
+      const kcls = ev.type === "FILL" ? "y" : ev.type === "ACK" ? "g" : ev.type === "NEW" ? "w" : ev.type === "CXLD" ? "d" : "r";
+      const isNewOrFill = ev.type === "NEW" || ev.type === "FILL";
+      const qtyStr = isNewOrFill ? qty : " ".repeat(qty.length);
       const line =
         sp("d", ev.timeStr) +
         " " +
         sp(kcls, lj(ev.type, 5)) +
         sp(sideCls, side) +
-        ` ${qty} @ ${sp("ours", px)}` +
+        ` ${qtyStr} @ ${sp("ours", px)}` +
         " " +
         sp("d", ev.detail);
 

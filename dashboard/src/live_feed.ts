@@ -15,7 +15,7 @@ export interface BookLevel {
 
 export interface LiveLogEvent {
   timeStr: string;
-  type: "SUBMIT" | "ACK" | "TOUCH" | "FILL" | "CANCEL";
+  type: "NEW" | "ACK" | "TOUCH" | "FILL" | "CXLD";
   side: "BUY" | "SELL";
   price: number;
   qty: number;
@@ -285,9 +285,8 @@ export class LiveMarketFeed {
     const d = new Date();
     const timeStr = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}`;
     this.state.events = [
-      { timeStr, type: "SUBMIT", side: "BUY", price: curBase - tick, qty: lot * 2, detail: `LIMIT BUY SUBMITTED TO DIRECT DMA`, cls: "w" },
-      { timeStr, type: "ACK", side: "BUY", price: curBase - tick, qty: lot * 2, detail: `EXCHANGE ACKNOWLEDGED [RESTING]`, cls: "d" },
-      { timeStr, type: "TOUCH", side: "BUY", price: curBase, qty: lot, detail: `MARKET TOUCH REVERSED AT BBO`, cls: "g" },
+      { timeStr, type: "NEW", side: "BUY", price: curBase - tick, qty: lot * 2, detail: `post-only limit → exchange`, cls: "w" },
+      { timeStr, type: "ACK", side: "BUY", price: curBase - tick, qty: lot * 2, detail: `entry 14.2ms resp 12.1ms | queue ahead 0.000 of 0.000`, cls: "g" },
     ];
   }
 
@@ -682,8 +681,10 @@ export class LiveMarketFeed {
         };
         this.syntheticOrders.push(ord);
         if (i === 0) {
-          this.logEvent("SUBMIT", "BUY", ord.price, ord.qty, "POST-ONLY LIMIT @ TOUCH", "w");
-          this.logEvent("ACK", "BUY", ord.price, ord.qty, `RESTING (AHEAD: ${ord.queueAhead.toFixed(2)})`, "g");
+          const e = (Math.random() * 5 + 10).toFixed(1);
+          const r = (Math.random() * 5 + 10).toFixed(1);
+          this.logEvent("NEW", "BUY", ord.price, ord.qty, "post-only limit → exchange", "w");
+          this.logEvent("ACK", "BUY", ord.price, ord.qty, `entry ${e}ms resp ${r}ms | queue ahead ${ord.queueAhead.toFixed(3)} of ${ord.levelQty.toFixed(3)}`, "g");
         }
       }
 
@@ -702,8 +703,10 @@ export class LiveMarketFeed {
         };
         this.syntheticOrders.push(ord);
         if (i === 0) {
-          this.logEvent("SUBMIT", "SELL", ord.price, ord.qty, "POST-ONLY LIMIT @ TOUCH", "w");
-          this.logEvent("ACK", "SELL", ord.price, ord.qty, `RESTING (AHEAD: ${ord.queueAhead.toFixed(2)})`, "g");
+          const e = (Math.random() * 5 + 10).toFixed(1);
+          const r = (Math.random() * 5 + 10).toFixed(1);
+          this.logEvent("NEW", "SELL", ord.price, ord.qty, "post-only limit → exchange", "w");
+          this.logEvent("ACK", "SELL", ord.price, ord.qty, `entry ${e}ms resp ${r}ms | queue ahead ${ord.queueAhead.toFixed(3)} of ${ord.levelQty.toFixed(3)}`, "g");
         }
       }
     }
@@ -794,7 +797,7 @@ export class LiveMarketFeed {
     this.tcaEngine.addTrade(rec);
   }
 
-  private logEvent(type: "SUBMIT" | "ACK" | "TOUCH" | "FILL" | "CANCEL", side: "BUY" | "SELL", price: number, qty: number, detail: string, cls: string) {
+  private logEvent(type: "NEW" | "ACK" | "TOUCH" | "FILL" | "CXLD", side: "BUY" | "SELL", price: number, qty: number, detail: string, cls: string) {
     const d = new Date();
     const timeStr = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}.${String(Math.floor(d.getMilliseconds() / 100))}`;
     this.state.events.unshift({ timeStr, type, side, price, qty, detail, cls });

@@ -227,9 +227,9 @@ export class LatencyPanel extends Panel {
       tctx.fillStyle = "#080b12";
       tctx.fillRect(0, 0, W, this.trips.height);
 
-      const labelW = Math.min(220, Math.round(W * 0.35));
+      const labelW = Math.max(145, Math.min(220, Math.round(W * 0.35)));
       const barAreaW = W - labelW - 90;
-      tctx.font = "14px VGA, monospace";
+      tctx.font = '14px ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace';
       tctx.textBaseline = "middle";
 
       const ping = stats.pingMs || 15;
@@ -266,10 +266,10 @@ export class LatencyPanel extends Panel {
 
         // Timing text
         tctx.fillStyle = "#ffffff";
-        tctx.font = "11px VGA, monospace";
+        tctx.font = '11px ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace';
         const total = (ev.entry + ev.resp).toFixed(1);
         tctx.fillText(`${ev.entry.toFixed(0)}+${ev.resp.toFixed(0)}ms (${total}ms)`, labelW + entryW + respW + 8, y);
-        tctx.font = "14px VGA, monospace";
+        tctx.font = '14px ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace';
       }
     } else {
       fitCanvas(this.trips, W, 0);
