@@ -250,6 +250,10 @@ export class LiveMarketFeed {
 
     const curBase = this.state.lastPrice || base;
     const now = Date.now();
+    this.syntheticOrders = [
+      { id: Date.now(), symbol: s, side: "BUY", price: curBase - tick, qty: lot * 2, submitTime: now, queueAhead: 35, levelQty: 50, arrivalPrice: curBase },
+      { id: Date.now() + 1, symbol: s, side: "SELL", price: curBase + tick, qty: lot * 2, submitTime: now, queueAhead: 25, levelQty: 40, arrivalPrice: curBase },
+    ];
     // Seed a 5-level market-maker grid — will be maintained by maintainSyntheticOrders()
     this.syntheticOrders = [];
     for (let i = 0; i < 5; i++) {
