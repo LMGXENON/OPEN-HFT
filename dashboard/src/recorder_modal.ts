@@ -308,7 +308,7 @@ export class RecorderModal {
     if (this.recorder) {
       // STOP recording
       this.startStopBtn.disabled = true;
-      this.startStopBtn.textContent = "⏳ COMILING .HBR...";
+      this.startStopBtn.textContent = "⏳ COMPILING .HBR...";
       const result = await this.recorder.stop();
       await this.finishRecording(result);
     } else {

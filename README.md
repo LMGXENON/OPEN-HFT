@@ -5,6 +5,10 @@
 
 Nanosecond-accurate market microstructure simulation, L2 order book replay, and execution forensics.
 
+<br />
+
+![OPEN-HRT Terminal](docs/shots/open_hrt_terminal.png)
+
 </div>
 
 ---
