@@ -41,6 +41,7 @@ Open **`http://localhost:5180`** in your browser. The terminal launches immediat
 
 OPEN-HRT uses `.hbr` (`HFTREC01`) binary archives containing nanosecond-timestamped order book states, order lifecycle events, trades, and latency telemetry.
 
+Follow this 3-step pipeline to record live market data, run your strategy, and generate `.hbr` session files:
 ### Method 1: In-Browser Market Recorder (Zero CLI / Instant Replay)
 
 You can record live exchange market data and compile `.hbr` backtest archives **directly inside the UI with zero terminal commands**:

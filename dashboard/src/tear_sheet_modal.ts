@@ -176,11 +176,11 @@ export class TearSheetModal {
     ctx.scale(dpr, dpr);
 
     // Background
-    ctx.fillStyle = "#040810";
+    ctx.fillStyle = "#05070d";
     ctx.fillRect(0, 0, W, H);
 
     // Grid lines
-    ctx.strokeStyle = "#0d2040";
+    ctx.strokeStyle = "#1b140b";
     ctx.lineWidth = 1;
     for (let x = 60; x < W; x += 80) {
       ctx.beginPath();
@@ -189,7 +189,7 @@ export class TearSheetModal {
       ctx.stroke();
     }
     const zeroY = H / 2;
-    ctx.strokeStyle = "#1e3a5f";
+    ctx.strokeStyle = "#382412";
     ctx.beginPath();
     ctx.moveTo(0, zeroY);
     ctx.lineTo(W, zeroY);
@@ -207,7 +207,7 @@ export class TearSheetModal {
     ];
 
     const stepX = (W - 80) / (points.length - 1);
-    ctx.strokeStyle = "#00d4ff";
+    ctx.strokeStyle = "#f59e0b";
     ctx.lineWidth = 2.5;
     ctx.beginPath();
 
@@ -222,7 +222,7 @@ export class TearSheetModal {
     // Gradient fill under markout line
     ctx.lineTo(40 + (points.length - 1) * stepX, zeroY);
     ctx.lineTo(40, zeroY);
-    ctx.fillStyle = "rgba(0, 212, 255, 0.12)";
+    ctx.fillStyle = "rgba(245, 158, 11, 0.15)";
     ctx.fill();
 
     // Draw dots and text
@@ -234,15 +234,15 @@ export class TearSheetModal {
       const px = 40 + i * stepX;
       const py = zeroY - points[i].bps * 28;
 
-      ctx.fillStyle = "#00d4ff";
+      ctx.fillStyle = "#f59e0b";
       ctx.beginPath();
       ctx.arc(px, py, 3.5, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = "#cbd5e1";
+      ctx.fillStyle = "#fbbf24";
       ctx.fillText(`${points[i].bps > 0 ? "+" : ""}${points[i].bps.toFixed(1)}`, px, py - 8);
 
-      ctx.fillStyle = "#64748b";
+      ctx.fillStyle = "#78716c";
       ctx.fillText(points[i].t, px, H - 8);
     }
   }

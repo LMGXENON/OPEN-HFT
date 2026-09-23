@@ -123,3 +123,4 @@ export function downloadSessionFile(buffer: ArrayBuffer, filename: string): void
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
