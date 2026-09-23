@@ -694,6 +694,7 @@ body {
 }
 
 /* Focus mode: full-screen, content starts top-left and fills the panel */
+/* Focus mode: full-screen, content starts top-left and fills the panel */
 .work.single > .panel > .body,
 .work.focus > .panel > .body {
   flex: 1 1 auto !important;
