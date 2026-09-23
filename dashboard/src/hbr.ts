@@ -75,3 +75,75 @@ export async function fetchHbr(url: string, onProgress?: (loaded: number, total:
   }
   return parseHbr(out.buffer);
 }
+
+function getDtype(arr: TypedArray): "f64" | "f32" | "i32" | "u32" | "i8" | "u8" {
+  if (arr instanceof Float64Array) return "f64";
+  if (arr instanceof Float32Array) return "f32";
+  if (arr instanceof Int32Array) return "i32";
+  if (arr instanceof Uint32Array) return "u32";
+  if (arr instanceof Int8Array) return "i8";
+  if (arr instanceof Uint8Array) return "u8";
+  return "f32";
+}
+
+/**
+ * Serializes an Hbr structure into a binary HFTREC01 ArrayBuffer.
+ */
+export function encodeHbr(hbr: Hbr): ArrayBuffer {
+  const arrayDescs: ArrayDesc[] = [];
+  let currentOffset = 0;
+
+  for (const [name, entry] of hbr.arrays.entries()) {
+    const data = entry.data;
+    const dtype = getDtype(data);
+    const byteLen = data.byteLength;
+    arrayDescs.push({
+      name,
+      dtype,
+      shape: entry.shape,
+      offset: currentOffset,
+      length: byteLen,
+    });
+    // Pad each array so the next array is aligned to 8 bytes
+    const pad = (8 - (byteLen % 8)) % 8;
+    currentOffset += byteLen + pad;
+  }
+
+  const headerObj = {
+    meta: hbr.meta,
+    arrays: arrayDescs,
+  };
+
+  const headerStr = JSON.stringify(headerObj);
+  const headerBytes = new TextEncoder().encode(headerStr);
+  const hlen = headerBytes.length;
+
+  let start = 12 + hlen;
+  const padH = (8 - (start % 8)) % 8;
+  start += padH;
+
+  const totalSize = start + currentOffset;
+  const buf = new ArrayBuffer(totalSize);
+  const u8 = new Uint8Array(buf);
+  const dv = new DataView(buf);
+
+  // Magic
+  const magic = new TextEncoder().encode("HFTREC01");
+  u8.set(magic, 0);
+
+  // Header length
+  dv.setUint32(8, hlen, true);
+
+  // JSON header
+  u8.set(headerBytes, 12);
+
+  // Arrays
+  for (const desc of arrayDescs) {
+    const entry = hbr.arrays.get(desc.name);
+    if (!entry) continue;
+    const arrU8 = new Uint8Array(entry.data.buffer, entry.data.byteOffset, entry.data.byteLength);
+    u8.set(arrU8, start + desc.offset);
+  }
+
+  return buf;
+}

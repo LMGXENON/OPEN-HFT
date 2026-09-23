@@ -29,6 +29,8 @@ import { QueuePanel } from "./panels/queue";
 import { TapePanel } from "./panels/tape";
 import { Session } from "./session";
 import { TCAEngine } from "./tca_engine";
+import { RecorderModal } from "./recorder_modal";
+import { TearSheetModal } from "./tear_sheet_modal";
 
 export class TerminalApp {
   private mode: Mode;
@@ -43,6 +45,8 @@ export class TerminalApp {
   // UI Components
   private readonly navBar: NavBar;
   private readonly profileModal: CompanyProfileModal;
+  private readonly recorderModal: RecorderModal;
+  private readonly tearSheetModal: TearSheetModal;
   private readonly work: HTMLElement;
   private readonly status: HTMLElement;
 
@@ -112,6 +116,8 @@ export class TerminalApp {
         onModeToggle: (m) => this.handleModeToggle(m),
         onTileSelect: (tileNum) => this.handleTileSelect(tileNum),
         onOpenProfile: (sym) => this.profileModal.show(sym),
+        onOpenRecorder: () => this.recorderModal.open(this.currentSymbol),
+        onOpenTearSheet: () => this.tearSheetModal.open(this.s),
         onExportReport: () => this.exportTCAReport(),
         onLoadSessionFile: (buf, name) => loadNewSession(buf, name),
         onReplayToggle: () => {
@@ -148,6 +154,12 @@ export class TerminalApp {
     }
 
     this.profileModal = new CompanyProfileModal(root);
+    this.tearSheetModal = new TearSheetModal();
+    this.recorderModal = new RecorderModal({
+      initialSymbol: this.currentSymbol,
+      onLoadSession: (buf, name) => loadNewSession(buf, name),
+      onOpenTearSheet: () => this.tearSheetModal.open(this.s),
+    });
 
     // 4. Mount Workspace & Bottom Status Bar
     this.work = el("div", "work", root);

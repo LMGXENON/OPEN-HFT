@@ -22,6 +22,8 @@ export interface NavBarCallbacks {
   onOpenProfile: (symbol: string) => void;
   onExportReport: () => void;
   onLoadSessionFile?: (buf: ArrayBuffer, fileName: string) => void;
+  onOpenRecorder?: () => void;
+  onOpenTearSheet?: () => void;
   onReplayToggle?: () => void;
   onReplayStep?: (deltaSec: number) => void;
   onReplayJumpToStart?: () => void;
@@ -162,6 +164,16 @@ export class NavBar {
       }
       fileInput.value = "";
     };
+
+    const recBtn = el("button", "term-action-btn rec-btn", rightActions);
+    recBtn.innerHTML = `<span class="rec-dot-icon">●</span> REC`;
+    recBtn.title = "Record real-time market data & simulate backtest";
+    recBtn.onclick = () => this.callbacks.onOpenRecorder?.();
+
+    const tcaBtn = el("button", "term-action-btn tca-btn", rightActions);
+    tcaBtn.innerHTML = `<span class="k-hint">📊</span> TCA`;
+    tcaBtn.title = "Open Institutional Post-Trade Tear Sheet & Markout Report";
+    tcaBtn.onclick = () => this.callbacks.onOpenTearSheet?.();
 
     const loadBtn = el("button", "term-action-btn load-btn", rightActions);
     loadBtn.innerHTML = `<span class="k-hint">⊕</span> LOAD .HBR`;

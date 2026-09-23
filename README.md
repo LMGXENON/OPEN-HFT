@@ -41,7 +41,23 @@ Open **`http://localhost:5180`** in your browser. The terminal launches immediat
 
 OPEN-HRT uses `.hbr` (`HFTREC01`) binary archives containing nanosecond-timestamped order book states, order lifecycle events, trades, and latency telemetry.
 
-Follow this 3-step pipeline to record live market data, run your strategy, and generate `.hbr` session files:
+### Method 1: In-Browser Market Recorder (Zero CLI / Instant Replay)
+
+You can record live exchange market data and compile `.hbr` backtest archives **directly inside the UI with zero terminal commands**:
+
+1. Click **`[● REC]`** in the top navigation bar.
+2. Select your **Target Market** (e.g., `BTC`, `ETH`, `SOL`, `DOGE`, `PEPE`, `NVDA`, `SPY`, `GOLD`).
+3. Choose your **Recording Duration** (`30s`, `1 min`, `3 min`, `5 min`, or `Manual Start/Stop`).
+4. Select your **Execution Simulator** (`Queue MM`, `Avellaneda-Stoikov`, `Passive Grid`) and **Latency Envelope** (`Cross-Connect 0.2ms`, `AWS Tokyo Colo 3.5ms`, `Retail 18ms`).
+5. Click **`START RECORDING`** — the live HUD monitors real-time packets, L2 deltas, incoming trades, and memory buffer.
+6. Once complete, click **`REPLAY IN TERMINAL`** to immediately load your backtest, **`EXPORT .HBR`** to save the archive to disk, or **`VIEW TCA TEAR SHEET`** for Wall Street-grade execution analytics.
+7. Past recordings are automatically persisted in your browser's local **Saved Backtest Library (IndexedDB)** for one-click instant access.
+
+---
+
+### Method 2: Batch CLI Pipeline (Python / Rust Core)
+
+For scheduled, multi-day, or high-throughput recording sessions, use the native CLI pipeline:
 
 ```
 [1. Capture Raw Feed] ──> [2. Prepare & Calibrate] ──> [3. Run Simulation] ──> [4. Replay in Terminal]
