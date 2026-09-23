@@ -61,6 +61,7 @@ export interface TCASummary {
 }
 
 export class TCAEngine {
+  private totalTradeCount: number = 0;
   private trades: TradeRecord[] = [];
   private symbol: string = "BTCUSDT";
 
@@ -70,16 +71,16 @@ export class TCAEngine {
 
   setSymbol(symbol: string) {
     this.symbol = symbol;
-    this.trades = [];
+    this.trades = []; this.totalTradeCount = 0;
   }
 
   clear() {
-    this.trades = [];
+    this.trades = []; this.totalTradeCount = 0;
   }
 
   addTrade(trade: TradeRecord) {
-    this.trades.push(trade);
-    if (this.trades.length > 500) {
+    this.trades.push(trade); this.totalTradeCount++;
+    if (this.trades.length > 50000) {
       this.trades.shift();
     }
   }
@@ -87,6 +88,11 @@ export class TCAEngine {
   getTrades(): TradeRecord[] {
     return this.trades;
   }
+
+  getTotalTradeCount(): number {
+    return this.totalTradeCount;
+  }
+
 
   /**
    * Process historical session orders and trades into institutional TCA records.

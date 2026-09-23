@@ -85,7 +85,7 @@ export class LatencyPanel extends Panel {
     ctx.fillText("-60s", W - 36, H - 2);
 
     // ---- order round trips ----
-    const nTrip = Math.max(2, rows - sparkRows - 6);
+    const nTrip = 0;
     const trips: { i: number; entry: number; resp: number }[] = [];
     for (let i = evN - 1; i >= 0 && trips.length < nTrip; i--) {
       const k = s.eKind[i];
@@ -213,73 +213,16 @@ export class LatencyPanel extends Panel {
     }
 
     // 3. Sub-header
-    this.mid.innerHTML =
-      "\n" +
-      sp("d", "ORDER ROUND TRIP  req → ") +
-      sp("c", "matching engine") +
-      sp("d", " → ") +
-      sp("m", "wire confirmation");
-
-    // 4. Round Trip Canvas (populated when rows > 10)
-    const nTrip = isFocus ? Math.min(10, Math.max(4, Math.floor((rows - 22) / 1.5))) : Math.max(0, rows - sparkRows - 4);
-    if (nTrip > 0) {
-      const tctx = fitCanvas(this.trips, W, nTrip * CH);
-      tctx.fillStyle = "#080b12";
-      tctx.fillRect(0, 0, W, this.trips.height);
-
-      const labelW = Math.max(145, Math.min(220, Math.round(W * 0.35)));
-      const barAreaW = W - labelW - 90;
-      tctx.font = '14px ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace';
-      tctx.textBaseline = "middle";
-
-      const ping = stats.pingMs || 15;
-      const tNow = Date.now();
-      
-      const dynEvents = [
-        { name: "ACK", side: "BUY", px: "TOUCH-1", entry: ping * (0.4 + Math.sin(tNow / 1000) * 0.05), resp: ping * (0.5 + Math.cos(tNow / 800) * 0.1), col: "#00e676" },
-        { name: "FILL", side: "BUY", px: "PASSIVE", entry: ping * (0.35 + Math.cos(tNow / 1200) * 0.06), resp: ping * (0.6 + Math.sin(tNow / 1500) * 0.08), col: "#ffcc00" },
-        { name: "ACK", side: "SELL", px: "TOUCH+1", entry: ping * (0.42 + Math.sin(tNow / 900) * 0.04), resp: ping * (0.53 + Math.cos(tNow / 1100) * 0.09), col: "#00e676" },
-        { name: "CXL", side: "BUY", px: "STALE", entry: ping * (0.33 + Math.cos(tNow / 1300) * 0.05), resp: ping * (0.45 + Math.sin(tNow / 700) * 0.06), col: "#78716c" },
-        { name: "ACK", side: "BUY", px: "TOUCH-2", entry: ping * (0.38 + Math.sin(tNow / 1400) * 0.04), resp: ping * (0.5 + Math.cos(tNow / 1000) * 0.07), col: "#00e676" },
-        { name: "FILL", side: "SELL", px: "MAKER", entry: ping * (0.4 + Math.cos(tNow / 800) * 0.05), resp: ping * (0.58 + Math.sin(tNow / 1200) * 0.09), col: "#ffcc00" },
-        { name: "ACK", side: "SELL", px: "TOUCH+2", entry: ping * (0.37 + Math.sin(tNow / 1100) * 0.03), resp: ping * (0.52 + Math.cos(tNow / 900) * 0.08), col: "#00e676" },
-        { name: "TOUCH", side: "BUY", px: "IN-FLIGHT", entry: ping * (0.39 + Math.cos(tNow / 1000) * 0.04), resp: ping * (0.49 + Math.sin(tNow / 1300) * 0.05), col: "#00e5ff" },
-      ];
-
-      const maxTrip = ping * 1.4;
-      const count = Math.min(nTrip, dynEvents.length);
-      for (let r = 0; r < count; r++) {
-        const ev = dynEvents[r];
-        const y = r * CH + CH / 2;
-
-        // Label
-        tctx.fillStyle = ev.col;
-        tctx.fillText(`${ev.name.padEnd(6)} ${ev.side.padEnd(5)} ${ev.px}`, 6, y);
-
-        // Entry bar (cyan)
-        const entryW = Math.max(2, Math.round((ev.entry / maxTrip) * barAreaW));
-        tctx.fillStyle = "rgba(0, 229, 255, 0.75)";
-        tctx.fillRect(labelW, r * CH + 3, entryW, CH - 6);
-
-        // Resp bar (magenta)
-        const respW = Math.max(2, Math.round((ev.resp / maxTrip) * barAreaW));
-        tctx.fillStyle = "rgba(224, 64, 251, 0.75)";
-        tctx.fillRect(labelW + entryW, r * CH + 3, respW, CH - 6);
-
-        // Timing text
-        tctx.fillStyle = "#ffffff";
-        tctx.font = '11px ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace';
-        const total = (ev.entry + ev.resp).toFixed(1);
-        tctx.fillText(`${ev.entry.toFixed(0)}+${ev.resp.toFixed(0)}ms (${total}ms)`, labelW + entryW + respW + 8, y);
-        tctx.font = '14px ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace';
-      }
-    } else {
-      fitCanvas(this.trips, W, 0);
-    }
+    // 3. Sub-header - Removed in live mode since we do not have real order trips
+    this.mid.innerHTML = "";
+    
+    // 4. Round Trip Canvas - Removed in live mode since we do not have real order trips
+    this.trips.width = 0;
+    this.trips.height = 0;
 
     // 5. Hardware & Telemetry Audit Grid (Fills all space with zero void)
     const out: string[] = [];
-    const usedRows = 4 + sparkRows + nTrip; // Top(2) + Mid(2) + Spark + Trips
+    const usedRows = 4 + sparkRows; // Top(2) + Mid(2) + Spark + Trips
     
     if (isFocus && rows - usedRows >= 11) {
       out.push("");

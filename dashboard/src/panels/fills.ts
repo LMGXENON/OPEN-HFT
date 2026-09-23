@@ -76,7 +76,7 @@ export class FillsPanel extends Panel {
     this.setTitle(`${nFill} fills │ rested p50 ${dur(med)} │ after touch ${nTouch} / crossed ${nCross}`);
   }
 
-  renderLive(trades: Array<{ id: number; timeStr: string; side: "BUY" | "SELL"; price: number; qty: number; notional: number; queueWaitMs: number; frontQtyAtAck: number; isToxic: boolean; cpty?: string }>): void {
+  renderLive(trades: Array<{ id: number; timeStr: string; side: "BUY" | "SELL"; price: number; qty: number; notional: number; queueWaitMs: number; frontQtyAtAck: number; isToxic: boolean; cpty?: string }>, totalFills: number = trades.length): void {
     const key = `${trades.length}|${trades[trades.length - 1]?.id ?? 0}`;
     if (!this.changed(key)) return;
 
@@ -124,7 +124,7 @@ export class FillsPanel extends Panel {
     const medWait = trades.length ? trades[Math.floor(trades.length / 2)].queueWaitMs : 0;
     const cleanMakers = trades.filter(t => !t.isToxic).length;
     const cleanPct = trades.length ? ((cleanMakers / trades.length) * 100).toFixed(0) : 100;
-    this.setTitle(`${trades.length} fills │ rested p50 ${medWait.toFixed(0)}ms │ clean maker ${cleanPct}%`);
+    this.setTitle(`${totalFills} fills │ rested p50 ${medWait.toFixed(0)}ms │ clean maker ${cleanPct}%`);
   }
 
 }

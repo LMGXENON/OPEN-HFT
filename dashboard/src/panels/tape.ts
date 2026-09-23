@@ -64,7 +64,7 @@ export class TapePanel extends Panel {
     this.setTitle(`${n} trades │ ${((n - f0) / 60).toFixed(1)}/s`);
   }
 
-  renderLive(trades: Array<{ time: number; price: number; qty: number; side: "BUY" | "SELL"; cpty?: string }>): void {
+  renderLive(trades: Array<{ time: number; price: number; qty: number; side: "BUY" | "SELL"; cpty?: string }>, totalTrades: number = trades.length): void {
     if (!trades || trades.length === 0) {
       this.content.innerHTML = `<div class="blotter-empty"><span class="amber">AWAITING MARKET MATCH EXECUTIONS...</span></div>`;
       return;

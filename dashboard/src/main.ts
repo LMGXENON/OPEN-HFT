@@ -233,7 +233,7 @@ export class TerminalApp {
 
     // 2. Tape (Time & Sales)
     if (this.tapePanel.el.isConnected) {
-      this.tapePanel.renderLive(state.trades);
+      this.tapePanel.renderLive(state.trades, state.totalTrades);
     }
 
     // 3. Queue Position
@@ -261,7 +261,7 @@ export class TerminalApp {
     // 5. Execution Blotter
     const trades = this.tcaEngine.getTrades();
     if (this.fillsPanel.el.isConnected) {
-      this.fillsPanel.renderLive(trades);
+      this.fillsPanel.renderLive(trades, this.tcaEngine.getTotalTradeCount());
     }
 
     // 6. Market Dynamics Canvas
@@ -282,7 +282,7 @@ export class TerminalApp {
         ticksPerSec: state.ticksPerSec,
         orderCount: syntheticOrders.length,
         fillCount: trades.length,
-        memMb: 14.8 + (Math.random() * 0.4 - 0.2), // Fluctuating slightly around 14.8MB
+        memMb: (performance as any).memory ? (performance as any).memory.usedJSHeapSize / 1024 / 1024 : 0,
         latencyMs: state.latencyMs,
       });
     }
