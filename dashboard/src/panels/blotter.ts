@@ -1,5 +1,5 @@
 /**
- * Open-HRTTCA Institutional Execution Blotter Panel
+ * Open-hftTCA Institutional Execution Blotter Panel
  * High-density audit trail of child order executions with individual TCA metrics.
  */
 

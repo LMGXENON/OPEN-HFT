@@ -75,11 +75,6 @@ export class NavBar {
       <span class="brand-tag">BACKTEST</span>
     `;
 
-    // Dedicated Backtest Badge (no toggle button)
-    const modeBadge = el("div", "term-mode-badge", topRow);
-    modeBadge.innerHTML = `<span class="mode-dot replay"></span><span class="mode-label">BACKTEST</span>`;
-    modeBadge.title = "OPEN-HRT Quantitative Microstructure Replay & Backtest Engine";
-
     // Center Universal Search Command Box
     const searchContainer = el("div", "term-search-container", topRow);
     const searchPrefix = el("span", "term-search-prefix", searchContainer);

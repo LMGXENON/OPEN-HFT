@@ -709,6 +709,13 @@ export class MarketRecorder {
         order_qty: this.config.orderQty || this.sec.lotSize * 2,
         grid_num: 5,
       },
+      models: {
+        queue: { kind: "PowerProbQueueFunc3", n: 3 },
+        latency: { kind: "calibrated", source: "DMA timestamping" },
+        fee: { maker: -0.00005, taker: 0.0007 },
+        exchange: this.sec.exchange || "Binance USDT-M Futures",
+        depth: "HashMapMarketDepth",
+      },
       run: {
         events_total: totalEvents + totalTrades,
         time_range_ns: [0, N > 0 ? this.frames[N - 1].t : 0],

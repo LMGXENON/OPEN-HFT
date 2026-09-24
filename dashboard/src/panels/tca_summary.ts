@@ -1,5 +1,5 @@
 /**
- * Open-HRTTCA Summary Panel
+ * Open-hftTCA Summary Panel
  * Institutional Best-Execution Scorecard & Cost Attribution
  */
 

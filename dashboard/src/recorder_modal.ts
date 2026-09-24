@@ -11,6 +11,7 @@ import {
   listSessionsFromLibrary,
   getSessionBufferFromLibrary,
   deleteSessionFromLibrary,
+  clearAllSessionsFromLibrary,
   downloadSessionFile,
 } from "./session_library";
 import type { Hbr } from "./hbr";
@@ -242,8 +243,20 @@ export class RecorderModal {
 
     // 4. Recent Backtests Library
     const libSection = el("div", "rec-library-section", this.container);
-    const libTitle = el("div", "rec-lib-title", libSection);
+    const libHeader = el("div", "rec-lib-header", libSection);
+    const libTitle = el("div", "rec-lib-title", libHeader);
     libTitle.textContent = "SAVED BACKTEST ARCHIVES (BROWSER STORAGE)";
+
+    const clearBtn = el("button", "lib-clear-btn", libHeader);
+    clearBtn.textContent = "🗑 PURGE ALL ARCHIVES";
+    clearBtn.title = "Delete all recorded sessions from browser IndexedDB";
+    clearBtn.onclick = async () => {
+      if (confirm("Delete all recorded backtests from browser storage?")) {
+        await clearAllSessionsFromLibrary();
+        await this.refreshLibrary();
+      }
+    };
+
     this.libraryListEl = el("div", "rec-lib-list", libSection);
   }
 

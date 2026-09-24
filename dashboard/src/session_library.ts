@@ -112,6 +112,17 @@ export async function deleteSessionFromLibrary(id: string): Promise<void> {
   });
 }
 
+export async function clearAllSessionsFromLibrary(): Promise<void> {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.clear();
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
 export function downloadSessionFile(buffer: ArrayBuffer, filename: string): void {
   const blob = new Blob([buffer], { type: "application/octet-stream" });
   const url = URL.createObjectURL(blob);

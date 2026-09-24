@@ -16,7 +16,7 @@ The Open-HRT team takes security and execution integrity seriously. If you disco
 Instead, please report it via one of the following methods:
 
 1. **GitHub Private Security Advisory**: Navigate to the **Security** tab of this repository and click **"Report a vulnerability"**.
-2. **Email**: Send encrypted or plain details to `security@open-hrttca.org`.
+2. **Email**: Send encrypted or plain details to `security@open-hfttca.org`.
 
 ### What to Include in Your Report
 - A description of the issue and its potential impact.

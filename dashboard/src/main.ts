@@ -203,15 +203,15 @@ export class TerminalApp {
     }
     this.activeTile = tileNum;
     this.navBar.setActiveTile(tileNum);
-    localStorage.setItem("open-hrt_tile", String(tileNum));
+    localStorage.setItem("open-hft_tile", String(tileNum));
     this.applyLayout();
     this.syncUrl();
   }
 
   private handleSymbolChange(symbol: string) {
     this.currentSymbol = symbol.toUpperCase().trim();
-    localStorage.setItem("open-hrt_symbol", this.currentSymbol);
-    localStorage.setItem("openhft_symbol", this.currentSymbol);
+    localStorage.setItem("open-hft_symbol", this.currentSymbol);
+    localStorage.setItem("openhrt_symbol", this.currentSymbol);
     this.tcaEngine.setSymbol(this.currentSymbol);
 
     if (baseSessionHbr) {
@@ -226,7 +226,7 @@ export class TerminalApp {
 
   private handleModeToggle(mode: Mode) {
     this.mode = mode;
-    localStorage.setItem("open-hrt_mode", mode);
+    localStorage.setItem("open-hft_mode", mode);
     this.navBar.setMode(mode);
 
     if (mode === "live") {
@@ -551,7 +551,7 @@ export class TerminalApp {
     const s = this.s;
     const summary = this.tcaEngine.processHistoricalSession(s);
     try {
-      localStorage.setItem("open-hrt_last_tca_report", JSON.stringify({
+      localStorage.setItem("open-hft_last_tca_report", JSON.stringify({
         symbol: s.meta.symbol,
         venue: s.meta.exchange || "Binance USDT-M Futures",
         timestamp: new Date().toISOString(),
@@ -731,8 +731,8 @@ async function main() {
   const root = document.getElementById("app")!;
   root.innerHTML = "";
 
-  const savedSymbol = localStorage.getItem("openhft_symbol") || localStorage.getItem("open-hrt_symbol");
-  const savedTile = localStorage.getItem("openhft_tile") || localStorage.getItem("open-hrt_tile");
+  const savedSymbol = localStorage.getItem("openhrt_symbol") || localStorage.getItem("open-hft_symbol");
+  const savedTile = localStorage.getItem("openhrt_tile") || localStorage.getItem("open-hft_tile");
 
   const params = new URLSearchParams(window.location.search);
   const initialSymbol = (params.get("symbol") || savedSymbol || "BTCUSDT").toUpperCase();

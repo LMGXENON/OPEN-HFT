@@ -143,7 +143,7 @@ export class LiveMarketFeed {
 
   private loadCachedState(symbol: string): boolean {
     try {
-      const raw = localStorage.getItem(`open-hrt_cache_${symbol}`);
+      const raw = localStorage.getItem(`open-hft_cache_${symbol}`);
       if (!raw) return false;
       const parsed = JSON.parse(raw);
       if (parsed && Array.isArray(parsed.bids) && parsed.bids.length > 0) {
@@ -183,7 +183,7 @@ export class LiveMarketFeed {
         priceHistory: this.state.priceHistory.slice(-40),
         events: this.state.events.slice(-30),
       };
-      localStorage.setItem(`open-hrt_cache_${this.symbol}`, JSON.stringify(data));
+      localStorage.setItem(`open-hft_cache_${this.symbol}`, JSON.stringify(data));
     } catch (e) {}
   }
 
