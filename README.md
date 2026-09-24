@@ -7,7 +7,7 @@ Nanosecond-accurate market microstructure simulation, L2 order book replay, and 
 
 <br />
 
-![OPEN-HRT Terminal](docs/shots/open_hrt_terminal.png)
+![OPEN-HRT Terminal](docs/shots/open_hft_terminal.png)
 
 </div>
 
