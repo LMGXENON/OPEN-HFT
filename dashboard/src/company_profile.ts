@@ -1,5 +1,5 @@
 /**
- * Open-HRT Security Profile (DES)
+ * Open-HFT Security Profile (DES)
  * Displays institutional fundamentals, valuation metrics, 52-week ranges,
  * trading telemetry, and execution SLA characteristics.
  */

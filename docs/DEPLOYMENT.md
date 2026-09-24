@@ -1,6 +1,6 @@
-# Deploying Open-HRT
+# Deploying Open-HFT
 
-Open-HRT is designed for zero-overhead local execution, self-hosted institutional deployment, and web deployment.
+Open-HFT is designed for zero-overhead local execution, self-hosted institutional deployment, and web deployment.
 
 ## 1. Quick Local Execution
 ```bash
@@ -13,7 +13,7 @@ npm run dev
 ```
 
 ## 2. Static Web Hosting (Cloudflare Pages / Vercel / AWS S3)
-To deploy the Open-HRT terminal to a public web URL or institutional intranet:
+To deploy the Open-HFT terminal to a public web URL or institutional intranet:
 ```bash
 cd dashboard
 npm run build
@@ -25,5 +25,5 @@ The resulting `dist/` directory can be deployed directly to Cloudflare Pages, Ve
 ```bash
 cd runner
 cargo build --release
-# Executable located at runner/target/release/open-hrt-runner
+# Executable located at runner/target/release/open-hft-runner
 ```

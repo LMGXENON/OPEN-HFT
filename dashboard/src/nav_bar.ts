@@ -1,5 +1,5 @@
 /**
- * Open-HRT Institutional Terminal Navigation Bar
+ * Open-HFT Institutional Terminal Navigation Bar
  * Features:
  * - Clean institutional header with mode switch (LIVE vs REPLAY)
  * - Universal Asset & Company Search (800+ crypto pairs, memecoins, stocks, commodities, ETFs, FX)
@@ -71,7 +71,7 @@ export class NavBar {
     // Left Brand
     const brand = el("div", "term-brand", topRow);
     brand.innerHTML = `
-      <span class="brand-title">OPEN-HRT</span>
+      <span class="brand-title">OPEN-HFT</span>
       <span class="brand-tag">BACKTEST</span>
     `;
 
@@ -195,9 +195,9 @@ export class NavBar {
       { num: 1, label: "BOOK" },
       { num: 2, label: "QUEUE" },
       { num: 3, label: "LATENCY" },
-      { num: 4, label: "EXECUTIONS" },
+      { num: 4, label: "TRADES" },
       { num: 5, label: "MARKET" },
-      { num: 6, label: "TRADES" },
+      { num: 6, label: "TAPE" },
       { num: 7, label: "LOG" },
       { num: 8, label: "ENGINE" },
       { num: 9, label: "COLLECTOR" },

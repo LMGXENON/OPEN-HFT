@@ -1,6 +1,6 @@
 /** LATENCY: feed latency (exchange timestamp -> local receipt) over time, and the order round trip
  * (request -> exchange matching engine -> response received) for the most recent order events. */
-import { CH, el, fitCanvas, sp } from "../dom";
+import { CH, CW, el, fitCanvas, sp } from "../dom";
 import { percentile } from "../fmt";
 import type { Session } from "../session";
 import { Panel, type RenderCtx } from "./base";
@@ -43,16 +43,17 @@ export class LatencyPanel extends Panel {
       p99,
       samples: vals.slice(-60),
       msgRate,
+      f,
     });
   }
 
 
 
-  renderLive(stats: { pingMs: number; p50: number; p95: number; p99: number; samples: number[]; msgRate: number }): void {
-    const W = this.exactWidth;
+  renderLive(stats: { pingMs: number; p50: number; p95: number; p99: number; samples: number[]; msgRate: number; f?: number }): void {
+    const W = Math.max(180, Math.floor(this.exactWidth > 0 ? this.exactWidth : this.cols * CW || 320));
     const rows = this.rows;
     const cols = this.cols;
-    const key = `${Math.round(stats.pingMs * 10)}|${Math.round(stats.p50 * 10)}|${stats.msgRate}|${W}|${rows}|${cols}`;
+    const key = `${stats.f ?? 0}|${Math.round(stats.pingMs * 10)}|${stats.samples?.length ?? 0}|${stats.samples?.[stats.samples.length - 1] ?? 0}|${W}|${rows}|${cols}`;
     if (!this.changed(key)) return;
 
     // 1. Header Metrics (Clean 2-line layout that never wraps or clips)
@@ -102,6 +103,7 @@ export class LatencyPanel extends Panel {
       // Axis labels
       ctx.fillStyle = "#78716c";
       ctx.font = "8px EGA8";
+      ctx.font = '8px ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace';
       ctx.fillText(`${maxVal.toFixed(0)}ms`, 4, 9);
       ctx.fillText("0ms", 4, H - 2);
       ctx.fillText("-60s", W - 32, H - 2);
@@ -124,9 +126,9 @@ export class LatencyPanel extends Panel {
       tctx.fillStyle = "#080b12";
       tctx.fillRect(0, 0, W, this.trips.height);
 
-      const labelW = Math.max(105, Math.min(135, Math.round(W * 0.28)));
-      const timingTextW = 120;
-      const barAreaW = Math.max(30, W - labelW - timingTextW - 12);
+      const labelW = Math.max(80, Math.min(130, Math.round(W * 0.25)));
+      const timingTextW = 110;
+      const barAreaW = Math.max(20, W - labelW - timingTextW - 12);
       tctx.font = '11px ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace';
       tctx.textBaseline = "middle";
 

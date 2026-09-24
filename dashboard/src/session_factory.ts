@@ -1,5 +1,5 @@
 /**
- * Open-HRT Dynamic Multi-Asset Session Factory
+ * Open-HFT Dynamic Multi-Asset Session Factory
  *
  * Generates an authentic, high-fidelity quantitative backtest session (.hbr)
  * for ANY requested asset (ETH, SOL, NVDA, DOGE, PEPE, SPY, GOLD, etc.)

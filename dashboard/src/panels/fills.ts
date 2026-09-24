@@ -9,14 +9,12 @@ import { Panel, type RenderCtx } from "./base";
 
 export class FillsPanel extends Panel {
   constructor(s: Session) {
-    super("fills", 4, "EXECUTIONS", s);
+    super("fills", 4, "TRADES", s);
   }
 
   render(c: RenderCtx): void {
     const s = this.s;
     const evN = s.eventsUpTo(c.t);
-    const key = `${evN}|${this.rows}|${this.cols}`;
-    if (!this.changed(key)) return;
 
     const trades: Array<{ id: number; timeStr: string; side: "BUY" | "SELL"; price: number; qty: number; notional: number; queueWaitMs: number; frontQtyAtAck: number; isToxic: boolean; cpty?: string }> = [];
 
@@ -46,11 +44,12 @@ export class FillsPanel extends Panel {
       });
     }
 
-    this.renderLive(trades);
+    this.renderLive(trades, trades.length);
   }
 
-  renderLive(trades: Array<{ id: number; timeStr: string; side: "BUY" | "SELL"; price: number; qty: number; notional: number; queueWaitMs: number; frontQtyAtAck: number; isToxic: boolean; cpty?: string }>): void {
-    const key = `${trades.length}|${trades[trades.length - 1]?.id ?? 0}`;
+  renderLive(trades: Array<{ id: number; timeStr: string; side: "BUY" | "SELL"; price: number; qty: number; notional: number; queueWaitMs: number; frontQtyAtAck: number; isToxic: boolean; cpty?: string }>, totalCount?: number): void {
+    const count = totalCount !== undefined ? totalCount : (trades?.length ?? 0);
+    const key = `${count}|${trades?.[trades.length - 1]?.id ?? 0}|${this.rows}|${this.cols}`;
     if (!this.changed(key)) return;
 
     const rows = this.rows;
@@ -62,9 +61,9 @@ export class FillsPanel extends Panel {
     const out: string[] = [head];
 
     if (!trades || trades.length === 0) {
-      out.push(sp("d", "no executions yet"));
+      out.push(sp("d", "no executed trades yet"));
       this.content.innerHTML = out.join("\n");
-      this.setTitle("0 fills");
+      this.setTitle("0 trades");
       return;
     }
 
@@ -95,7 +94,7 @@ export class FillsPanel extends Panel {
 
     this.content.innerHTML = out.join("\n");
     const medWait = trades.length ? trades[Math.floor(trades.length / 2)].queueWaitMs : 0;
-    this.setTitle(`${trades.length} fills │ rested p50 ${medWait.toFixed(0)}ms │ clean maker 100%`);
+    this.setTitle(`${count.toLocaleString()} trades │ rested p50 ${medWait.toFixed(0)}ms │ clean maker 100%`);
   }
 
 }

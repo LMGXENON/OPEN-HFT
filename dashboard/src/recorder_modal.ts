@@ -1,5 +1,5 @@
 /**
- * Open-HRT Market Recorder & Ingestion Modal
+ * Open-HFT Market Recorder & Ingestion Modal
  * High-density institutional control center to record real-time market data,
  * simulate HFT strategies, export .hbr archives, and manage the backtest library.
  */
@@ -91,7 +91,7 @@ export class RecorderModal {
     const title = el("span", "modal-title", titleBox);
     title.textContent = "MARKET RECORDER & INGESTION ENGINE";
     const sub = el("span", "modal-sub", titleBox);
-    sub.textContent = "OPEN-HRT // REAL-TIME L2 CAPTURE & MICROSECOND QUEUE SIMULATOR";
+    sub.textContent = "OPEN-HFT // REAL-TIME L2 CAPTURE & MICROSECOND QUEUE SIMULATOR";
 
     const closeBtn = el("button", "modal-close-btn", header);
     closeBtn.textContent = "✕";

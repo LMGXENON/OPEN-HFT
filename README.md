@@ -1,13 +1,13 @@
 <div align="center">
 
-# OPEN-HRT
+# OPEN-HFT
 ### Quantitative Backtest Terminal
 
 Nanosecond-accurate market microstructure simulation, L2 order book replay, and execution forensics.
 
 <br />
 
-![OPEN-HRT Terminal](docs/shots/open_hft_terminal.png)
+![OPEN-HFT Terminal](docs/shots/open_hft_terminal.png)
 
 </div>
 
@@ -15,7 +15,7 @@ Nanosecond-accurate market microstructure simulation, L2 order book replay, and 
 
 ## Overview
 
-**OPEN-HRT** is a high-frequency trading backtesting engine and execution forensics terminal built on [hftbacktest](https://github.com/nkaz001/hftbacktest). It gives quants and algorithmic traders complete frame-by-frame visibility into exchange matching engines:
+**OPEN-HFT** is a high-frequency trading backtesting engine and execution forensics terminal built on [hftbacktest](https://github.com/nkaz001/hftbacktest). It gives quants and algorithmic traders complete frame-by-frame visibility into exchange matching engines:
 
 - **24-Level Order Book Ladder**: Tick-by-tick reconstruction from raw exchange packet streams.
 - **Probabilistic Queue Position**: Realistic exchange-side queue modeling (`ahead | ours | behind`) with power-law fill probabilities (`PowerProbQueueModel3`, n=3).
@@ -43,7 +43,7 @@ Open **`http://localhost:5180`** in your browser. The terminal launches immediat
 
 ## How to Record & Generate Backtest Data
 
-OPEN-HRT uses `.hbr` (`HFTREC01`) binary archives containing nanosecond-timestamped order book states, order lifecycle events, trades, and latency telemetry.
+OPEN-HFT uses `.hbr` (`HFTREC01`) binary archives containing nanosecond-timestamped order book states, order lifecycle events, trades, and latency telemetry.
 
 Follow this 3-step pipeline to record live market data, run your strategy, and generate `.hbr` session files:
 ### Method 1: In-Browser Market Recorder (Zero CLI / Instant Replay)
@@ -141,7 +141,7 @@ Build and invoke the native simulation runner directly:
 (cd runner && cargo build --release)
 
 # 2. Execute strategy simulation
-./runner/target/release/open-hrt-runner \
+./runner/target/release/open-hft-runner \
   --data data/npz/btcusdt_20260915.npz \
   --latency data/latency/btcusdt_20260915.npz \
   --symbol BTCUSDT \
@@ -198,7 +198,7 @@ You can replay backtest recordings using three methods:
 
 ## Dynamic Multi-Asset Simulation (800+ Assets)
 
-OPEN-HRT includes an on-the-fly microstructure scaling engine (`session_factory.ts`). When you switch symbols using the search bar (`SEC>`), quick pills (`BTC`, `ETH`, `SOL`, `NVDA`, `GOLD`), or asset directory (`F8`):
+OPEN-HFT includes an on-the-fly microstructure scaling engine (`session_factory.ts`). When you switch symbols using the search bar (`SEC>`), quick pills (`BTC`, `ETH`, `SOL`, `NVDA`, `GOLD`), or asset directory (`F8`):
 
 - Price trajectories rescale dynamically to the target asset's market price.
 - Tick sizes, lot sizes, spread dynamics, and book depths re-anchor automatically.
@@ -281,5 +281,5 @@ Click **`[EXPORT]`** or press **`F7`** to export an institutional execution qual
 
 ## License
 
-OPEN-HRT is open-source software released under the [MIT License](LICENSE).
+OPEN-HFT is open-source software released under the [MIT License](LICENSE).
 Bitmap fonts from The Ultimate Oldschool PC Font Pack (`WebPlus_IBM_VGA_9x16`, `WebPlus_IBM_EGA_8x8`) licensed under CC BY-SA 4.0; Departure Mono licensed under SIL Open Font License.

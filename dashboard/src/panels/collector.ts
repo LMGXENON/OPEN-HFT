@@ -44,7 +44,7 @@ export class CollectorPanel extends Panel {
     if (!col) {
       const lines = [
         sp("d", lj("SOURCE", 8)) + sp("w", s.meta.symbol ?? "DMA FEED") + sp("d", ` │ BINARY HBR RECORDING`),
-        sp("d", lj("ENGINE", 8)) + sp("c", s.meta.engine?.runner ?? "OPEN-HRT REPLAY ENGINE"),
+        sp("d", lj("ENGINE", 8)) + sp("c", s.meta.engine?.runner ?? "OPEN-HFT REPLAY ENGINE"),
         sp("d", lj("FRAMES", 8)) + sp("amber", `${s.nFrames.toLocaleString()} frames`) + sp("d", ` │ ${s.fillEvents.length} fills recorded`),
         sp("d", lj("STATUS", 8)) + sp("g", "DMA RECORDING BUFFER ACTIVE (0 DROPPED TICKS)"),
       ];

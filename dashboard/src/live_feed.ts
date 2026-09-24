@@ -1,5 +1,5 @@
 /**
- * Open-HRT Multi-Asset Feed & Synthetic Execution Simulator
+ * Open-HFT Multi-Asset Feed & Synthetic Execution Simulator
  * Connects directly to institutional public feeds for Crypto,
  * and provides realistic microsecond L2 order book simulation for Equities,
  * Commodities, ETFs, and FX.
@@ -41,6 +41,7 @@ export interface LiveMarketState {
   bids: BookLevel[];
   asks: BookLevel[];
   trades: Array<{ time: number; price: number; qty: number; side: "BUY" | "SELL"; cpty?: string }>;
+  totalTrades: number;
   ofi: number;
   volume24h: number;
   priceChangePct24h: number;
@@ -85,6 +86,7 @@ export class LiveMarketFeed {
   private lastMsgCount = 0;
   private dirty = true;
   private cacheTimer: number | null = null;
+  private totalTradesCount = 0;
 
   constructor(tcaEngine: TCAEngine, initialSymbol = "BTCUSDT") {
     this.tcaEngine = tcaEngine;
@@ -104,6 +106,7 @@ export class LiveMarketFeed {
       bids: [],
       asks: [],
       trades: [],
+      totalTrades: 0,
       ofi: 0,
       volume24h: 1850000000,
       priceChangePct24h: 1.42,
@@ -247,6 +250,8 @@ export class LiveMarketFeed {
         { time: now - 1100, price: base, qty: lot * 3, side: "BUY" },
       ];
     }
+    this.totalTradesCount = Math.max(this.totalTradesCount, this.state.trades.length);
+    this.state.totalTrades = this.totalTradesCount;
 
     const curBase = this.state.lastPrice || base;
     const now = Date.now();
@@ -511,6 +516,8 @@ export class LiveMarketFeed {
       tradeObj = { time, price, qty, side, cpty };
     }
     this.state.trades.unshift(tradeObj);
+    this.totalTradesCount++;
+    this.state.totalTrades = this.totalTradesCount;
 
     this.updatePriceHistory(price);
     this.matchSyntheticOrders(price, qty, side, time);
@@ -601,6 +608,8 @@ export class LiveMarketFeed {
           trObj = { time: now, price: tradePrice, qty: tradeQty, side, cpty };
         }
         this.state.trades.unshift(trObj);
+        this.totalTradesCount++;
+        this.state.totalTrades = this.totalTradesCount;
 
         this.state.high24h = Math.max(this.state.high24h, tradePrice);
         this.state.low24h = Math.min(this.state.low24h, tradePrice);

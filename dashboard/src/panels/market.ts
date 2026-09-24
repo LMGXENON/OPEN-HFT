@@ -53,15 +53,16 @@ export class MarketPanel extends Panel {
       low24h: Math.min(...priceHistory),
       vwap24h: mid,
       priceHistory,
+      f: c.f,
     });
   }
 
 
 
-  renderLive(state: { symbol: string; lastPrice: number; bestBid: number; bestAsk: number; spreadBps: number; volume24h: number; priceChangePct24h: number; high24h: number; low24h: number; vwap24h: number; priceHistory?: number[] }): void {
-    const W = this.cols * CW;
-    const H = this.rows * CH;
-    const key = `${state.symbol}|${state.lastPrice}|${state.priceHistory?.length ?? 0}|${state.priceHistory?.[state.priceHistory.length - 1] ?? 0}|${W}|${H}`;
+  renderLive(state: { symbol: string; lastPrice: number; bestBid: number; bestAsk: number; spreadBps: number; volume24h: number; priceChangePct24h: number; high24h: number; low24h: number; vwap24h: number; priceHistory?: number[]; f?: number }): void {
+    const W = Math.max(180, Math.floor(this.exactWidth > 0 ? this.exactWidth : this.cols * CW || 320));
+    const H = Math.max(100, Math.floor(this.exactHeight > 0 ? this.exactHeight : this.rows * CH || 180));
+    const key = `${state.f ?? 0}|${state.symbol}|${state.lastPrice}|${state.priceHistory?.length ?? 0}|${state.priceHistory?.[state.priceHistory.length - 1] ?? 0}|${W}|${H}`;
     if (!this.changed(key)) return;
 
     const ctx = fitCanvas(this.canvas, W, H);

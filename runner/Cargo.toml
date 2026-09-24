@@ -1,8 +1,8 @@
 [package]
-name = "open-hrt-runner"
+name = "open-hft-runner"
 version = "1.0.0"
 edition = "2021"
-description = "High-performance market microstructure and execution simulation engine for Open-HRT"
+description = "High-performance market microstructure and execution simulation engine for Open-HFT"
 
 [dependencies]
 hftbacktest = { path = "../hftbacktest/hftbacktest", default-features = false, features = ["backtest"] }

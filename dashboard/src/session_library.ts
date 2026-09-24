@@ -1,5 +1,5 @@
 /**
- * Open-HRT Persistent Session Library (IndexedDB)
+ * Open-HFT Persistent Session Library (IndexedDB)
  * Stores recorded and imported .hbr backtest archives in the browser
  * for instant one-click switching and management.
  */

@@ -11,7 +11,7 @@ We release security patches and critical dependency fixes for the following vers
 
 ## Reporting a Vulnerability
 
-The Open-HRT team takes security and execution integrity seriously. If you discover a security vulnerability, execution discrepancy, or denial-of-service issue in Open-HRT (including WebSocket handling or serialization logic), please do **NOT** open a public issue.
+The Open-HFT team takes security and execution integrity seriously. If you discover a security vulnerability, execution discrepancy, or denial-of-service issue in Open-HFT (including WebSocket handling or serialization logic), please do **NOT** open a public issue.
 
 Instead, please report it via one of the following methods:
 

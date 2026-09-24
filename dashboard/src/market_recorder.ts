@@ -1,5 +1,5 @@
 /**
- * Open-HRT High-Frequency Market Recorder & Ingestion Engine
+ * Open-HFT High-Frequency Market Recorder & Ingestion Engine
  * Streams real-time L2 order book deltas and trade prints from exchange WebSockets,
  * executes realistic microsecond queue simulation in-memory,
  * and compiles the telemetry into standard .hbr binary archives.

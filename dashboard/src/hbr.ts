@@ -1,4 +1,4 @@
-/** Loader for Open-HRT session recordings (.hbr) written by runner/src/record.rs.
+/** Loader for Open-HFT session recordings (.hbr) written by runner/src/record.rs.
  *
  * Layout: "HFTREC01" | u32 header length | JSON header | pad to 8 | little-endian arrays.
  */
