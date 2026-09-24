@@ -212,7 +212,6 @@ export class TerminalApp {
   private handleSymbolChange(symbol: string) {
     this.currentSymbol = symbol.toUpperCase().trim();
     localStorage.setItem("open-hft_symbol", this.currentSymbol);
-    localStorage.setItem("openhrt_symbol", this.currentSymbol);
     this.tcaEngine.setSymbol(this.currentSymbol);
 
     if (baseSessionHbr) {
@@ -736,8 +735,8 @@ async function main() {
   const root = document.getElementById("app")!;
   root.innerHTML = "";
 
-  const savedSymbol = localStorage.getItem("openhrt_symbol") || localStorage.getItem("open-hft_symbol");
-  const savedTile = localStorage.getItem("openhrt_tile") || localStorage.getItem("open-hft_tile");
+  const savedSymbol = localStorage.getItem("open-hft_symbol") || localStorage.getItem("openhrt_symbol");
+  const savedTile = localStorage.getItem("open-hft_tile") || localStorage.getItem("openhrt_tile");
 
   const params = new URLSearchParams(window.location.search);
   const initialSymbol = (params.get("symbol") || savedSymbol || "BTCUSDT").toUpperCase();

@@ -20,7 +20,7 @@ export interface LibrarySessionRecord extends LibrarySessionSummary {
   buffer: ArrayBuffer;
 }
 
-const DB_NAME = "OpenHrtDB";
+const DB_NAME = "OpenHftDB";
 const STORE_NAME = "sessions";
 const DB_VERSION = 1;
 

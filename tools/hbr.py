@@ -1,4 +1,4 @@
-"""Reader for Open-HRT session recordings (.hbr) — see runner/src/record.rs for the layout.
+"""Reader for Open-HFT session recordings (.hbr) — see runner/src/record.rs for the layout.
 
     python tools/hbr.py data/recordings/<name>.hbr      # prints a summary
 """

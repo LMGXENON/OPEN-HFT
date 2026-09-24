@@ -216,9 +216,9 @@ Press keys `0` through `9` to toggle between the 9-panel overview and individual
 | **`1`** | **BOOK** | Level 2 book ladder with centered price column and split queue bars. |
 | **`2`** | **QUEUE** | Queue breakdown (`ahead \| ours \| behind`), hits, and resting wait times. |
 | **`3`** | **LATENCY** | Feed receipt latency sparkline, jitter percentiles, and wire transit bars. |
-| **`4`** | **EXECUTIONS** | Tabular execution blotter with fill prices, resting times, and notionals. |
+| **`4`** | **TRADES** | Tabular execution blotter with fill prices, resting times, and notionals. |
 | **`5`** | **MARKET** | Mid-price canvas with reference gridlines and volume bars. |
-| **`6`** | **TRADES** | Tabular Time & Sales tape with trade timestamps, side, size, and counterparty. |
+| **`6`** | **TAPE** | Tabular Time & Sales tape with trade timestamps, side, size, and counterparty. |
 | **`7`** | **ORDER LOG** | Lifecycle audit stream (`SUBMIT`, `ACK`, `FILL`, `CXL`). |
 | **`8`** | **ENGINE** | Kernel throughput, tick rate, fill ratio, and memory footprint. |
 | **`9`** | **COLLECTOR** | Network ingress telemetry, packet counts, and payload integrity. |
