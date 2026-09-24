@@ -55,8 +55,6 @@ def main() -> None:
     runner_candidates = [
         ROOT / "runner" / "target" / "release" / "open-hrt-runner",
         ROOT / "runner" / "target" / "release" / "open-hrt-runner.exe",
-        ROOT / "runner" / "target" / "release" / "stratum-runner",
-        ROOT / "runner" / "target" / "release" / "stratum-runner.exe",
     ]
     runner_bin = next((c for c in runner_candidates if c.exists()), None)
     if not runner_bin:

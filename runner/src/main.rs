@@ -939,5 +939,5 @@ fn fmt_ts(ns: i64) -> String {
 }
 
 fn rustc_version() -> String {
-    option_env!("OPEN-HRT_RUSTC").unwrap_or("unknown").to_string()
+    option_env!("OPEN_HRT_RUSTC").unwrap_or("unknown").to_string()
 }
