@@ -1,6 +1,7 @@
 import os
 
 code = '''/**
+ * Open-HRT Multi-Asset Security Catalog & Global Exchange Directory
  * Open-HFT Multi-Asset Security Catalog & Global Exchange Directory
  * Covers every major financial asset on the planet:
  * - 800+ Crypto Pairs (All Digital Assets, including every memecoin)

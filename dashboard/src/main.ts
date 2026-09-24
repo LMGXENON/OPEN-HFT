@@ -212,6 +212,7 @@ export class TerminalApp {
   private handleSymbolChange(symbol: string) {
     this.currentSymbol = symbol.toUpperCase().trim();
     localStorage.setItem("open-hft_symbol", this.currentSymbol);
+    localStorage.setItem("openhrt_symbol", this.currentSymbol);
     this.tcaEngine.setSymbol(this.currentSymbol);
 
     if (baseSessionHbr) {

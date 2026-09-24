@@ -21,6 +21,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PY = ROOT / ".venv" / "Scripts" / "python.exe"
+RUNNER = ROOT / "runner" / "target" / "release" / "open-hrt-runner.exe"
 RUNNER = ROOT / "runner" / "target" / "release" / "open-hft-runner.exe"
 
 
@@ -53,6 +54,8 @@ def main() -> None:
                         "--mul-entry", str(a.mul_entry), "--mul-resp", str(a.mul_resp)], check=True, cwd=ROOT)
 
     runner_candidates = [
+        ROOT / "runner" / "target" / "release" / "open-hrt-runner",
+        ROOT / "runner" / "target" / "release" / "open-hrt-runner.exe",
         ROOT / "runner" / "target" / "release" / "open-hft-runner",
         ROOT / "runner" / "target" / "release" / "open-hft-runner.exe",
     ]
