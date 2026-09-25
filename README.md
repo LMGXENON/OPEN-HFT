@@ -3,11 +3,14 @@
 # OPEN-HFT
 ### Quantitative High-Frequency Backtest & TCA Terminal
 
+**Institutional High-Frequency Trading Terminal & Backtest Engine**
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-amber.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org/)
 [![Rust](https://img.shields.io/badge/Rust-1.80+-orange.svg)](https://www.rust-lang.org/)
 [![Performance](https://img.shields.io/badge/Simulation-Sub--Microsecond-emerald.svg)]()
 
+Nanosecond L2 order book replay, microsecond queue modeling, and execution forensics built on [hftbacktest](https://github.com/nkaz001/hftbacktest).
 Nanosecond-accurate market microstructure simulation, L2 order book replay, and execution forensics built on [hftbacktest](https://github.com/nkaz001/hftbacktest).
 
 <br />
@@ -18,6 +21,7 @@ Nanosecond-accurate market microstructure simulation, L2 order book replay, and 
 
 ---
 
+### Quickstart
 ## Overview
 
 **OPEN-HFT** is an institutional high-frequency trading backtesting platform and execution forensics terminal. It provides quants and algorithmic traders with complete frame-by-frame visibility into exchange matching engines:
@@ -36,17 +40,26 @@ Nanosecond-accurate market microstructure simulation, L2 order book replay, and 
 Run the web terminal locally:
 
 ```bash
+cd dashboard && npm install && npm run dev
 cd dashboard
 npm install
 npm run dev
 ```
 
+Open **`http://localhost:5180`** for immediate interactive backtest replay.
 Open **`http://localhost:5180`** in your browser. Preloaded historical market sessions launch immediately.
 
 ---
 
+### Features
 ## How to Record & Backtest Data
 
+- **24-Level L2 Depth Ladder**: Tick-by-tick order book reconstruction from raw exchange packet streams.
+- **Queue Priority Simulation**: Realistic queue modeling (`PowerProbQueueModel3`, n=3) with power-law fill probabilities.
+- **Latency & Market Dynamics**: Hardware feed jitter ($p_{50}, p_{95}, p_{99}$), DMA round trips, and smooth trajectory canvas.
+- **800+ Assets**: Instant scaling across Crypto (including memecoins), Equities, ETFs, Commodities, and FX.
+- **In-Browser Recorder**: Click **`[● REC]`** to record live exchange depth, simulate execution, and replay instantly.
+- **Institutional TCA (`F7`)**: One-click Implementation Shortfall, adverse selection markouts (+100ms to +30s), and SEC 605/606 reports.
 OPEN-HFT uses `.hbr` (`HFTREC01`) binary archives containing nanosecond-timestamped order book states, order lifecycle events, trades, and latency telemetry.
 
 ### Method 1: In-Browser Market Recorder (Zero CLI)
@@ -83,6 +96,7 @@ Output `.hbr` archives are staged directly to `dashboard/public/sessions/` for i
 
 ---
 
+### Tile Navigation (Keys `0`–`9`)
 ## Terminal Navigation (Keys `0`–`9`)
 
 Press numeric keys `0` through `9` to toggle between the 9-panel overview and individual full-screen panels:
@@ -92,6 +106,8 @@ Press numeric keys `0` through `9` to toggle between the 9-panel overview and in
 | **`0`** | **ALL TILES** | Full 9-panel terminal overview |
 | **`1`** | **BOOK** | 24-level depth ladder with centered price column and queue bars |
 | **`2`** | **QUEUE** | Queue position (`ahead \| ours \| behind`), hits, and resting wait times |
+| **`3`** | **LATENCY** | Hardware receipt sparkline, jitter percentiles, and wire transit breakdown |
+| **`4`** | **TRADES** | Strategy blotter with fill prices, resting times, counterparty tags, and notional |
 | **`3`** | **LATENCY** | Feed latency sparkline, jitter percentiles, and wire transit breakdown |
 | **`4`** | **TRADES** | Strategy execution blotter with fill prices, resting times, and notionals |
 | **`5`** | **MARKET** | Mid-price trajectory canvas with reference gridlines and volume profile |
@@ -100,6 +116,7 @@ Press numeric keys `0` through `9` to toggle between the 9-panel overview and in
 | **`8`** | **ENGINE** | Kernel throughput, tick rate, fill ratio, and memory footprint |
 | **`9`** | **COLLECTOR** | Network ingress packet rates, message throughput, and payload telemetry |
 
+**Controls:** `SPACE` Play/Pause &nbsp;|&nbsp; `←`/`→` Step &nbsp;|&nbsp; `↑`/`↓` Speed (`0.25x`–`MAX`) &nbsp;|&nbsp; `F8` Security Profile &nbsp;|&nbsp; `F7` TCA Report &nbsp;|&nbsp; `ESC` Close Modals
 ### Controls & Shortcuts
 | Key | Action |
 |---|---|
@@ -112,6 +129,7 @@ Press numeric keys `0` through `9` to toggle between the 9-panel overview and in
 
 ---
 
+### Architecture
 ## Regulatory TCA Reports (`F7`)
 
 Click **`[EXPORT]`** or press **`F7`** to export an institutional execution quality report:
@@ -130,6 +148,7 @@ Click **`[EXPORT]`** or press **`F7`** to export an institutional execution qual
 
 ```
 ├── dashboard/       # TypeScript terminal & high-performance canvas visualizers
+├── runner/          # Native Rust backtest runner & HFTREC01 binary serializer
 │   ├── src/
 │   │   ├── main.ts         # App lifecycle & tile grid manager
 │   │   ├── nav_bar.ts      # Top navigation, playback scrubber, & asset search
@@ -145,6 +164,8 @@ Click **`[EXPORT]`** or press **`F7`** to export an institutional execution qual
 
 ---
 
+### License
 ## License
 
+MIT © OPEN-HFT
 OPEN-HFT is open-source software released under the [MIT License](LICENSE).
